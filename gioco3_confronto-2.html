@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gioco 3 — Confronto Paleolitico vs Neolitico</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--paleo:#C85A10;--paleo-light:#FFF0DC;--paleo-dark:#8B3500;--neo:#2E8B2E;--neo-light:#E4F5DC;--neo-dark:#1A5010;--bg:#F8F4FF;--card:#fff;--radius:14px;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:var(--bg);padding:16px;}
+.game-wrap{max-width:680px;margin:0 auto;}
+.game-header{background:linear-gradient(90deg,var(--paleo) 50%,var(--neo) 50%);border-radius:20px;padding:16px 20px;margin-bottom:18px;display:flex;align-items:center;gap:12px;}
+.game-header-emoji{font-size:36px;}
+.game-header h1{color:#fff;font-size:20px;font-weight:800;line-height:1.2;}
+.game-header p{color:rgba(255,255,255,0.88);font-size:13px;margin-top:3px;}
+.contatore{text-align:center;font-size:13px;color:#aaa;margin-bottom:8px;}
+.contatore span{font-weight:800;color:#7040C0;}
+.carte-pool{margin-bottom:20px;}
+.carte-pool-title{font-size:13px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;text-align:center;}
+.carte-grid{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;min-height:60px;}
+.carta{background:var(--card);border:2.5px solid #C0B0E0;border-radius:12px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;text-align:center;transition:all .2s;user-select:none;color:#333;}
+.carta:hover{border-color:#8050C0;background:#F0E8FF;transform:translateY(-2px);}
+.carta.selected{border-color:#8050C0;background:#E8D8FF;box-shadow:0 0 0 3px rgba(128,80,192,0.25);transform:translateY(-2px);}
+.colonne{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;}
+.colonna{border-radius:16px;overflow:hidden;}
+.col-header{padding:12px 14px;text-align:center;font-weight:800;font-size:15px;cursor:pointer;}
+.col-header-paleo{background:var(--paleo);color:#fff;}
+.col-header-neo{background:var(--neo);color:#fff;}
+.col-header-emoji{font-size:22px;display:block;margin-bottom:4px;}
+.col-header-hint{font-size:11px;opacity:.85;font-weight:600;}
+.col-body{min-height:120px;padding:10px;border:2.5px dashed #E0D0C0;border-top:none;border-radius:0 0 14px 14px;background:#FAFAFA;display:flex;flex-wrap:wrap;gap:8px;align-content:flex-start;}
+.col-body.neo-body{border-color:#C0DCC0;background:#F6FFF6;}
+.carta-piazzata{border-radius:10px;padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;user-select:none;}
+.carta-piazzata.paleo{background:var(--paleo-light);border:2px solid var(--paleo);color:var(--paleo-dark);}
+.carta-piazzata.neo{background:var(--neo-light);border:2px solid var(--neo);color:var(--neo-dark);}
+.carta-piazzata.corretta{opacity:.75;cursor:default;pointer-events:none;}
+.carta-piazzata.sbagliata{animation:shake .3s;}
+.carta-piazzata:not(.corretta):hover{filter:brightness(.92);}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.btn-verifica{display:block;width:100%;padding:14px;background:#7040C0;color:#fff;border:none;border-radius:14px;font-family:inherit;font-size:16px;font-weight:800;cursor:pointer;transition:all .2s;margin-bottom:16px;}
+.btn-verifica:hover{background:#5030A0;transform:translateY(-1px);}
+.btn-verifica:disabled{opacity:.4;pointer-events:none;}
+.feedback-box{border-radius:14px;padding:14px 16px;margin-bottom:12px;font-size:13px;font-weight:700;line-height:1.6;display:none;}
+.feedback-box.ok{background:#E8F5E9;border:2px solid var(--neo);color:var(--neo-dark);}
+.feedback-box.no{background:#FFF3E0;border:2px solid #E08000;color:#7A4000;}
+.fine-gioco{text-align:center;padding:16px 0;display:none;}
+.fine-gioco-emoji{font-size:56px;margin-bottom:10px;}
+.fine-gioco h2{font-size:22px;font-weight:800;color:#3A1A6A;}
+.fine-gioco p{font-size:14px;color:#777;margin-top:8px;line-height:1.6;}
+.stelle{font-size:34px;letter-spacing:4px;margin:10px 0;}
+.btn-ricomincia{background:#E0D8F8;color:#3A1A6A;border:none;border-radius:12px;padding:10px 22px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:12px;}
+.btn-ricomincia:hover{background:#C8B8F0;}
+</style>
+</head>
+<body>
+<div class="game-wrap">
+  <div class="game-header">
+    <div class="game-header-emoji">⚖️</div>
+    <div><h1>Gioco 3 — Confronto</h1><p>Ogni informazione appartiene al Paleolitico o al Neolitico?</p></div>
+  </div>
+  <div class="contatore">Carte da sistemare: <span id="contatore">0</span> rimaste</div>
+  <div class="carte-pool">
+    <div class="carte-pool-title">👆 Tocca una carta, poi tocca la colonna giusta</div>
+    <div class="carte-grid" id="cartePool"></div>
+  </div>
+  <div class="colonne">
+    <div class="colonna">
+      <div class="col-header col-header-paleo" onclick="assegna('paleo')">
+        <span class="col-header-emoji">🪨</span>
+        PALEOLITICO
+        <div class="col-header-hint">tocca per inserire qui</div>
+      </div>
+      <div class="col-body" id="colPaleo"></div>
+    </div>
+    <div class="colonna">
+      <div class="col-header col-header-neo" onclick="assegna('neo')">
+        <span class="col-header-emoji">🌾</span>
+        NEOLITICO
+        <div class="col-header-hint">tocca per inserire qui</div>
+      </div>
+      <div class="col-body neo-body" id="colNeo"></div>
+    </div>
+  </div>
+  <div class="feedback-box" id="feedbackBox"></div>
+  <button class="btn-verifica" id="btnVerifica" onclick="verifica()" disabled>✅ Verifica le risposte</button>
+  <div class="fine-gioco" id="fineGioco">
+    <div class="fine-gioco-emoji">🏆</div>
+    <h2>Hai completato il confronto!</h2>
+    <div class="stelle" id="stelleFinali"></div>
+    <p id="msgFinale"></p>
+    <button class="btn-ricomincia" onclick="riavvia()">🔄 Ricomincia</button>
+  </div>
+</div>
+<script>
+const tutteLeCart=[
+  {id:'c1',testo:'Vive in grotte e accampamenti temporanei',risp:'paleo'},
+  {id:'c2',testo:'Si sposta in cerca di cibo — è nomade',risp:'paleo'},
+  {id:'c3',testo:'Usa il chopper per colpire e tagliare',risp:'paleo'},
+  {id:'c4',testo:'Scopre e usa il fuoco',risp:'paleo'},
+  {id:'c5',testo:'Dipinge sulle pareti delle grotte',risp:'paleo'},
+  {id:'c6',testo:'Caccia e raccoglie bacche e radici',risp:'paleo'},
+  {id:'c7',testo:'Vive in piccoli gruppi nomadi',risp:'paleo'},
+  {id:'c8',testo:'Seppellisce i morti con riti funebri',risp:'paleo'},
+  {id:'c9',testo:'Realizza statuette dette Veneri',risp:'paleo'},
+  {id:'c10',testo:'Le pietre vengono scheggiate, non levigate',risp:'paleo'},
+  {id:'c11',testo:'Coltiva grano, orzo, riso e mais',risp:'neo'},
+  {id:'c12',testo:'Alleva buoi, pecore, capre e maiali',risp:'neo'},
+  {id:'c13',testo:'Costruisce capanne e villaggi stabili',risp:'neo'},
+  {id:'c14',testo:"Usa l'aratro per lavorare i campi",risp:'neo'},
+  {id:'c15',testo:'Produce vasi di argilla con il colombino',risp:'neo'},
+  {id:'c16',testo:'Usa il telaio per tessere stoffe',risp:'neo'},
+  {id:'c17',testo:'Vive in modo stanziale',risp:'neo'},
+  {id:'c18',testo:'Venera la Dea Madre — dea della fertilità',risp:'neo'},
+  {id:'c19',testo:'Addomestica il lupo per proteggere il gregge',risp:'neo'},
+  {id:'c20',testo:'Le pietre vengono levigate con la sabbia',risp:'neo'},
+];
+let carte=[],selezionata=null,piazzate={},verificate=false,errori=0;
+function init(){
+  carte=[...tutteLeCart];
+  for(let i=carte.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[carte[i],carte[j]]=[carte[j],carte[i]];}
+  selezionata=null;piazzate={};verificate=false;errori=0;
+  document.getElementById('colPaleo').innerHTML='';
+  document.getElementById('colNeo').innerHTML='';
+  document.getElementById('feedbackBox').style.display='none';
+  document.getElementById('fineGioco').style.display='none';
+  document.getElementById('btnVerifica').disabled=true;
+  document.getElementById('btnVerifica').style.display='block';
+  renderPool();aggiornaContatore();
+}
+function renderPool(){
+  const pool=document.getElementById('cartePool');pool.innerHTML='';
+  carte.forEach(c=>{
+    if(piazzate[c.id])return;
+    const div=document.createElement('div');
+    div.className='carta'+(selezionata&&selezionata.id===c.id?' selected':'');
+    div.textContent=c.testo;div.onclick=()=>selezionaCarta(c);pool.appendChild(div);
+  });
+}
+function selezionaCarta(c){if(verificate)return;selezionata=selezionata&&selezionata.id===c.id?null:c;renderPool();}
+function assegna(col){
+  if(!selezionata||verificate)return;
+  piazzate[selezionata.id]=col;
+  renderColonna('paleo');renderColonna('neo');
+  selezionata=null;renderPool();aggiornaContatore();
+  const rimaste=carte.filter(c=>!piazzate[c.id]).length;
+  document.getElementById('btnVerifica').disabled=(rimaste>0);
+}
+function renderColonna(col){
+  const el=document.getElementById(col==='paleo'?'colPaleo':'colNeo');el.innerHTML='';
+  carte.forEach(c=>{
+    if(piazzate[c.id]!==col)return;
+    const div=document.createElement('div');div.className='carta-piazzata '+col;
+    div.textContent=c.testo;div.title='Tocca per rimuovere';
+    div.onclick=()=>{
+      if(verificate&&div.classList.contains('corretta'))return;
+      delete piazzate[c.id];renderColonna('paleo');renderColonna('neo');
+      renderPool();aggiornaContatore();
+      document.getElementById('btnVerifica').disabled=true;
+      document.getElementById('feedbackBox').style.display='none';
+    };
+    el.appendChild(div);
+  });
+}
+function aggiornaContatore(){
+  const rimaste=carte.filter(c=>!piazzate[c.id]).length;
+  document.getElementById('contatore').textContent=rimaste;
+}
+function verifica(){
+  verificate=true;let corrette=0,sbagliate=[];
+  carte.forEach(c=>{
+    const col=piazzate[c.id];
+    const colEl=document.getElementById(col==='paleo'?'colPaleo':'colNeo');
+    Array.from(colEl.children).forEach(div=>{
+      if(div.textContent===c.testo){
+        if(col===c.risp){div.classList.add('corretta');corrette++;}
+        else{
+          div.classList.add('sbagliata');sbagliate.push(c.testo);errori++;
+          setTimeout(()=>{delete piazzate[c.id];verificate=false;renderColonna('paleo');renderColonna('neo');renderPool();aggiornaContatore();const rimaste=carte.filter(cc=>!piazzate[cc.id]).length;if(rimaste===0)document.getElementById('btnVerifica').disabled=false;},1000);
+        }
+      }
+    });
+  });
+  const fb=document.getElementById('feedbackBox');
+  if(sbagliate.length===0){setTimeout(()=>mostraFine(corrette),600);}
+  else{fb.className='feedback-box no';fb.innerHTML='❌ <strong>Alcune carte non sono nel posto giusto!</strong> Le ho rimesse nel mazzo — riprova!<br><em>Sbagliato: '+sbagliate.join(' • ')+'</em>';fb.style.display='block';setTimeout(()=>{verificate=false;},1100);}
+}
+function mostraFine(corrette){
+  document.getElementById('fineGioco').style.display='block';
+  document.getElementById('btnVerifica').style.display='none';
+  document.getElementById('feedbackBox').style.display='none';
+  let stelle='',msg='';
+  if(errori===0){stelle='⭐⭐⭐';msg='Perfetto al primo tentativo! Sai distinguere benissimo i due periodi!';}
+  else if(errori<=4){stelle='⭐⭐';msg='Molto bene! Hai fatto qualche errore ma hai corretto tutto. Bravissimo/a!';}
+  else{stelle='⭐';msg='Stai imparando! Rileggi la mappa del confronto e riprova. Ce la fai!';}
+  document.getElementById('stelleFinali').textContent=stelle;
+  document.getElementById('msgFinale').textContent=msg;
+}
+function riavvia(){document.getElementById('btnVerifica').style.display='block';init();}
+init();
+</script>
+</body>
+</html>

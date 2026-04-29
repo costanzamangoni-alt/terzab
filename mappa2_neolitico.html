@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Il Neolitico — Mappa interattiva</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  background: #F0FAF0;
+  padding: 16px;
+}
+.mappa-wrap {
+  max-width: 720px;
+  margin: 0 auto;
+  background: #F0FAF0;
+  border-radius: 20px;
+  padding: 24px 20px 32px;
+}
+.top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.mappa-title { font-size: 22px; font-weight: 800; color: #1A5C1A; }
+.font-controls { display: flex; gap: 6px; }
+.font-btn {
+  background: #C8EAC8; border: 1px solid #6ABE6A; color: #1A5C1A;
+  border-radius: 8px; padding: 4px 12px; font-size: 13px; cursor: pointer; font-weight: 700;
+}
+.font-btn:hover { background: #A8D8A8; }
+.mappa-subtitle { text-align: center; font-size: 13px; color: #3A8A3A; margin-bottom: 20px; }
+.central-node {
+  background: #2E8B2E; color: #fff; border-radius: 50%;
+  width: 130px; height: 130px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  margin: 0 auto 28px; font-weight: 800; font-size: 14px; text-align: center; line-height: 1.3;
+  box-shadow: 0 3px 0 #1A6A1A;
+}
+.central-emoji { font-size: 30px; margin-bottom: 4px; }
+.rami-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.ramo { border-radius: 16px; overflow: hidden; border: 2px solid transparent; }
+.ramo-header {
+  display: flex; align-items: center; gap: 10px; padding: 13px 16px;
+  cursor: pointer; user-select: none; font-weight: 700; font-size: 15px;
+}
+.ramo-header:hover { filter: brightness(0.93); }
+.ramo-emoji { font-size: 24px; flex-shrink: 0; }
+.ramo-titolo { flex: 1; }
+.ramo-arrow { font-size: 14px; transition: transform 0.25s; }
+.ramo.aperto .ramo-arrow { transform: rotate(90deg); }
+.nodi-wrap { padding: 0 12px 12px; display: none; }
+.ramo.aperto .nodi-wrap { display: block; }
+.nodo {
+  background: rgba(255,255,255,0.75); border-radius: 10px; padding: 9px 12px;
+  margin-top: 8px; font-size: 14px; display: flex; align-items: flex-start; gap: 8px;
+}
+.nodo-emoji { font-size: 18px; flex-shrink: 0; margin-top: 2px; }
+.nodo-text { color: #2a2a2a; line-height: 1.55; }
+.nodo-label { font-weight: 700; }
+.approfondimento-btn {
+  margin-top: 7px; background: rgba(255,255,255,0.85);
+  border: 1px solid rgba(0,0,0,0.13); border-radius: 8px; padding: 4px 10px;
+  font-size: 12px; cursor: pointer; color: #555; display: inline-block; font-family: inherit;
+}
+.approfondimento-btn:hover { background: #fff; }
+.approfondimento-box {
+  background: #f6fff6; border-left: 3px solid #2E8B2E; border-radius: 0 8px 8px 0;
+  padding: 10px 12px; margin-top: 8px; font-size: 13px; color: #2a3a2a; line-height: 1.6; display: none;
+}
+.approfondimento-box.visibile { display: block; }
+.approfondimento-titolo { font-weight: 700; color: #1A5C1A; margin-bottom: 4px; font-size: 13px; }
+
+.ramo-quando { background: #E8F8E8; border-color: #4AAA4A; }
+.ramo-quando .ramo-header { background: #5AB85A; color: #fff; }
+.ramo-agri { background: #FFF5DC; border-color: #C8A020; }
+.ramo-agri .ramo-header { background: #D4AA30; color: #fff; }
+.ramo-allev { background: #FFF0E8; border-color: #C87840; }
+.ramo-allev .ramo-header { background: #D08040; color: #fff; }
+.ramo-abitare { background: #E8F0FF; border-color: #4060C0; }
+.ramo-abitare .ramo-header { background: #5070D0; color: #fff; }
+.ramo-tecnol { background: #F8E8F8; border-color: #8840A8; }
+.ramo-tecnol .ramo-header { background: #9050B8; color: #fff; }
+.ramo-sociale { background: #FFF0F0; border-color: #C03040; }
+.ramo-sociale .ramo-header { background: #D04050; color: #fff; }
+
+@media print {
+  .font-controls { display: none; }
+  .nodi-wrap { display: block !important; }
+  .approfondimento-box { display: block !important; }
+  .ramo-arrow { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="mappa-wrap" id="mappaWrap">
+  <div class="top-bar">
+    <div class="mappa-title">🌾 IL NEOLITICO</div>
+    <div class="font-controls">
+      <button class="font-btn" onclick="cambiaFont(-1)">A−</button>
+      <button class="font-btn" onclick="cambiaFont(1)">A+</button>
+    </div>
+  </div>
+  <div class="mappa-subtitle">Tocca ogni ramo per esplorarlo • Tocca 🔍 per gli approfondimenti</div>
+
+  <div class="central-node">
+    <div class="central-emoji">🌱</div>
+    <div>La rivoluzione<br>neolitica</div>
+  </div>
+
+  <div class="rami-grid">
+
+    <!-- RAMO 1: QUANDO -->
+    <div class="ramo ramo-quando" id="ramo1">
+      <div class="ramo-header" onclick="toggleRamo('ramo1')">
+        <span class="ramo-emoji">⏳</span><span class="ramo-titolo">Quando</span><span class="ramo-arrow">▶</span>
+      </div>
+      <div class="nodi-wrap">
+        <div class="nodo"><span class="nodo-emoji">📅</span><div class="nodo-text"><span class="nodo-label">Inizio:</span> circa 10.000 anni fa</div></div>
+        <div class="nodo"><span class="nodo-emoji">🌡️</span><div class="nodo-text"><span class="nodo-label">Causa:</span> fine delle glaciazioni — clima più caldo</div></div>
+        <div class="nodo"><span class="nodo-emoji">💥</span><div class="nodo-text"><span class="nodo-label">Rivoluzione:</span> cambiamenti profondi e irreversibili nella vita umana</div></div>
+        <div class="nodo"><span class="nodo-emoji">🗺️</span><div class="nodo-text"><span class="nodo-label">Dove prima:</span> Vicino Oriente (Mezzaluna fertile), poi diffuso nel mondo</div></div>
+        <div class="nodo"><span class="nodo-emoji">🪨</span><div class="nodo-text"><span class="nodo-label">Il nome:</span> "età della pietra levigata" — pietre strofinate, non solo scheggiate</div></div>
+      </div>
+    </div>
+
+    <!-- RAMO 2: AGRICOLTURA -->
+    <div class="ramo ramo-agri" id="ramo2">
+      <div class="ramo-header" onclick="toggleRamo('ramo2')">
+        <span class="ramo-emoji">🌾</span><span class="ramo-titolo">L'agricoltura</span><span class="ramo-arrow">▶</span>
+      </div>
+      <div class="nodi-wrap">
+        <div class="nodo"><span class="nodo-emoji">🌱</span><div class="nodo-text"><span class="nodo-label">La grande novità:</span> coltivare le piante invece di raccoglierle</div></div>
+        <div class="nodo"><span class="nodo-emoji">🌾</span><div class="nodo-text"><span class="nodo-label">Cosa si coltiva:</span> grano, orzo, riso, mais</div></div>
+        <div class="nodo"><span class="nodo-emoji">🏠</span><div class="nodo-text"><span class="nodo-label">Vita stanziale:</span> per coltivare bisogna restare fermi ad aspettare le piante</div></div>
+        <div class="nodo"><span class="nodo-emoji">♀️</span><div class="nodo-text"><span class="nodo-label">Chi la inventò?</span> Probabilmente le donne, che raccoglievano piante e ne conoscevano le caratteristiche</div></div>
+        <div class="nodo"><span class="nodo-emoji">🌍</span><div class="nodo-text">
+          <span class="nodo-label">Diffusione nel mondo:</span> diverse zone, tempi diversi
+          <br><button class="approfondimento-btn" onclick="toggleApp('app-agri-mondo')">🔍 Il Neolitico nel mondo</button>
+          <div class="approfondimento-box" id="app-agri-mondo">
+            <div class="approfondimento-titolo">🌍 L'agricoltura si diffonde</div>
+            L'agricoltura nacque prima nella <strong>Mezzaluna fertile</strong> (Vicino Oriente, 11.000 anni fa). Poi si diffuse in Asia (9.500 anni fa), Africa (5.000-4.000 anni fa), America centrale e del Sud (7.500 anni fa). Dove le foreste erano fitte, si tagliava e bruciava la vegetazione per coltivare. Dove non si poteva coltivare, si praticava la <strong>pastorizia</strong>.
+          </div>
+        </div></div>
+      </div>
+    </div>
+
+    <!-- RAMO 3: ALLEVAMENTO -->
+    <div class="ramo ramo-allev" id="ramo3">
+      <div class="ramo-header" onclick="toggleRamo('ramo3')">
+        <span class="ramo-emoji">🐄</span><span class="ramo-titolo">L'allevamento</span><span class="ramo-arrow">▶</span>
+      </div>
+      <div class="nodi-wrap">
+        <div class="nodo"><span class="nodo-emoji">📅</span><div class="nodo-text"><span class="nodo-label">Quando:</span> arrivò dopo l'agricoltura</div></div>
+        <div class="nodo"><span class="nodo-emoji">🐑</span><div class="nodo-text"><span class="nodo-label">Animali:</span> buoi, pecore, capre, maiali — i più docili</div></div>
+        <div class="nodo"><span class="nodo-emoji">🥛</span><div class="nodo-text"><span class="nodo-label">Prodotti secondari:</span> latte, lana, aiuto nei lavori dei campi</div></div>
+        <div class="nodo"><span class="nodo-emoji">🐺</span><div class="nodo-text"><span class="nodo-label">Il lupo:</span> primo animale addomesticato dall'uomo per proteggere gli allevamenti</div></div>
+        <div class="nodo"><span class="nodo-emoji">🌍</span><div class="nodo-text">
+          <span class="nodo-label">Nel mondo:</span> ogni zona addomesticò animali diversi
+          <br><button class="approfondimento-btn" onclick="toggleApp('app-allev')">🔍 La domesticazione nel mondo</button>
+          <div class="approfondimento-box" id="app-allev">
+            <div class="approfondimento-titolo">🐄 Animali addomesticati</div>
+            Pecore e mucche: <strong>10.000 anni fa</strong> (Mezzaluna fertile). Capre: 10.000 anni fa. Maiali: 9.000 anni fa. Asini: 6.000 anni fa. Cavalli: 6.000 anni fa (Europa orientale). Dromedari: 5.000 anni fa. Lama: 5.500 anni fa (Sud America).
+          </div>
+        </div></div>
+      </div>
+    </div>
+
+    <!-- RAMO 4: ABITARE -->
+    <div class="ramo ramo-abitare" id="ramo4">
+      <div class="ramo-header" onclick="toggleRamo('ramo4')">
+        <span class="ramo-emoji">🏘️</span><span class="ramo-titolo">Abitare nel Neolitico</span><span class="ramo-arrow">▶</span>
+      </div>
+      <div class="nodi-wrap">
+        <div class="nodo"><span class="nodo-emoji">🏠</span><div class="nodo-text"><span class="nodo-label">Case:</span> capanne rettangolari o ovali, pali e fibre vegetali, poi mattoni di argilla</div></div>
+        <div class="nodo"><span class="nodo-emoji">🔥</span><div class="nodo-text"><span class="nodo-label">Focolare:</span> un forno o una buca nel terreno per cucinare e scaldarsi</div></div>
+        <div class="nodo"><span class="nodo-emoji">🏰</span><div class="nodo-text"><span class="nodo-label">Fossato:</span> circondava la casa per proteggersi e raccogliere acqua</div></div>
+        <div class="nodo"><span class="nodo-emoji">🌊</span><div class="nodo-text"><span class="nodo-label">Palafitte:</span> capanne su pali nell'acqua — per difendersi dai predatori</div></div>
+        <div class="nodo"><span class="nodo-emoji">🏙️</span><div class="nodo-text">
+          <span class="nodo-label">Villaggi:</span> le case si avvicinano sempre di più, nasce il villaggio
+          <br><button class="approfondimento-btn" onclick="toggleApp('app-catalhuyuk')">🔍 Çatal Hüyük</button>
+          <div class="approfondimento-box" id="app-catalhuyuk">
+            <div class="approfondimento-titolo">🏙️ Çatal Hüyük — Turchia</div>
+            Villaggio neolitico scoperto in Anatolia (Turchia) negli anni '50 dall'archeologo James Mellaart. Abitato tra <strong>9.500 e 7.500 anni fa</strong>. Le abitazioni non avevano porte e finestre: si entrava dal <strong>tetto</strong> per proteggersi dai predatori! Si è conservato perché colpito da un incendio. Nel sito sono state trovate molte statue della <strong>Dea Madre</strong>, divinità della fertilità della Terra.
+          </div>
+        </div></div>
+      </div>
+    </div>
+
+    <!-- RAMO 5: TECNOLOGIE -->
+    <div class="ramo ramo-tecnol" id="ramo5">
+      <div class="ramo-header" onclick="toggleRamo('ramo5')">
+        <span class="ramo-emoji">⚙️</span><span class="ramo-titolo">Nuove tecnologie</span><span class="ramo-arrow">▶</span>
+      </div>
+      <div class="nodi-wrap">
+        <div class="nodo"><span class="nodo-emoji">🌾</span><div class="nodo-text"><span class="nodo-label">Falce:</span> schegge di pietra su legno — per tagliare i cereali</div></div>
+        <div class="nodo"><span class="nodo-emoji">🔨</span><div class="nodo-text"><span class="nodo-label">Aratro:</span> solca il terreno per seminare — prima trascinato da persone, poi da buoi</div></div>
+        <div class="nodo"><span class="nodo-emoji">🪓</span><div class="nodo-text"><span class="nodo-label">Accetta:</span> taglia il legname per costruire le capanne</div></div>
+        <div class="nodo"><span class="nodo-emoji">🧵</span><div class="nodo-text"><span class="nodo-label">Telaio:</span> tesse lana e fibre vegetali (lino, cotone) per fare vestiti</div></div>
+        <div class="nodo"><span class="nodo-emoji">🏺</span><div class="nodo-text">
+          <span class="nodo-label">Ceramica:</span> vasi in argilla per conservare e cuocere il cibo
+          <br><button class="approfondimento-btn" onclick="toggleApp('app-ceramica')">🔍 Le ceramiche del Neolitico</button>
+          <div class="approfondimento-box" id="app-ceramica">
+            <div class="approfondimento-titolo">🏺 La tecnica del colombino</div>
+            I vasi si realizzavano con la tecnica <strong>"a colombino"</strong>: si prendeva l'argilla lungo i fiumi, si creavano lunghi serpentelli di pasta e si sovrapponevano a cerchi. Il vaso veniva lasciato seccare al sole, poi levigato e cotto in forni. Le decorazioni si ottenevano stampando conchiglie, dita o strumenti sull'argilla fresca.
+          </div>
+        </div></div>
+      </div>
+    </div>
+
+    <!-- RAMO 6: VITA SOCIALE -->
+    <div class="ramo ramo-sociale" id="ramo6">
+      <div class="ramo-header" onclick="toggleRamo('ramo6')">
+        <span class="ramo-emoji">👨‍👩‍👧‍👦</span><span class="ramo-titolo">Vita di gruppo</span><span class="ramo-arrow">▶</span>
+      </div>
+      <div class="nodi-wrap">
+        <div class="nodo"><span class="nodo-emoji">👨‍👩‍👧</span><div class="nodo-text"><span class="nodo-label">Famiglia (clan):</span> gruppo allargato — genitori, figli, parenti, cugini</div></div>
+        <div class="nodo"><span class="nodo-emoji">⚖️</span><div class="nodo-text"><span class="nodo-label">Divisione compiti:</span> le donne: casa, campi, bambini — gli uomini: lavori pesanti, allevamento</div></div>
+        <div class="nodo"><span class="nodo-emoji">🌾</span><div class="nodo-text"><span class="nodo-label">Produzione comune:</span> i frutti della terra si dividevano tra le famiglie del villaggio</div></div>
+        <div class="nodo"><span class="nodo-emoji">🏛️</span><div class="nodo-text"><span class="nodo-label">Lavori specializzati:</span> nel villaggio nascono persone con mestieri diversi</div></div>
+        <div class="nodo"><span class="nodo-emoji">🌍</span><div class="nodo-text">
+          <span class="nodo-label">Agricoltura nel tempo:</span> ancora oggi importantissima
+          <br><button class="approfondimento-btn" onclick="toggleApp('app-agri-tempo')">🔍 L'agricoltura nel tempo</button>
+          <div class="approfondimento-box" id="app-agri-tempo">
+            <div class="approfondimento-titolo">🌾 Dal Neolitico ad oggi</div>
+            L'agricoltura è stata l'attività più importante per migliaia di anni. I cambiamenti sono stati <strong>graduali e irreversibili</strong>. Solo con la <strong>rivoluzione industriale</strong> (fine del 1700) le macchine, come i trattori, hanno cambiato il modo di coltivare. Ancora oggi in molte zone del mondo si vive di agricoltura.
+          </div>
+        </div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function toggleRamo(id) { document.getElementById(id).classList.toggle('aperto'); }
+function toggleApp(id) { document.getElementById(id).classList.toggle('visibile'); }
+let fontDelta = 0;
+function cambiaFont(dir) {
+  fontDelta = Math.max(-2, Math.min(4, fontDelta + dir));
+  document.getElementById('mappaWrap').style.fontSize = (14 + fontDelta) + 'px';
+}
+</script>
+</body>
+</html>

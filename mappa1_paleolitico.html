@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Il Paleolitico — Mappa interattiva</title>
+<style>
+/* Font system fallback sicuro per offline */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  background: #FFF8EC;
+  padding: 16px;
+}
+.mappa-wrap {
+  max-width: 720px;
+  margin: 0 auto;
+  background: #FFF8EC;
+  border-radius: 20px;
+  padding: 24px 20px 32px;
+}
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.mappa-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #7A3B10;
+}
+.font-controls { display: flex; gap: 6px; }
+.font-btn {
+  background: #F0DFB8;
+  border: 1px solid #D4A96A;
+  color: #7A3B10;
+  border-radius: 8px;
+  padding: 4px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  font-weight: 700;
+}
+.font-btn:hover { background: #E8C98A; }
+.mappa-subtitle {
+  text-align: center;
+  font-size: 13px;
+  color: #B06030;
+  margin-bottom: 20px;
+}
+.central-node {
+  background: #C85A10;
+  color: #fff;
+  border-radius: 50%;
+  width: 130px;
+  height: 130px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 28px;
+  font-weight: 800;
+  font-size: 14px;
+  text-align: center;
+  line-height: 1.3;
+  box-shadow: 0 3px 0 #A03800;
+}
+.central-emoji { font-size: 30px; margin-bottom: 4px; }
+.rami-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+}
+.ramo { border-radius: 16px; overflow: hidden; border: 2px solid transparent; }
+.ramo-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 16px;
+  cursor: pointer;
+  user-select: none;
+  font-weight: 700;
+  font-size: 15px;
+}
+.ramo-header:hover { filter: brightness(0.93); }
+.ramo-emoji { font-size: 24px; flex-shrink: 0; }
+.ramo-titolo { flex: 1; }
+.ramo-arrow { font-size: 14px; transition: transform 0.25s; }
+.ramo.aperto .ramo-arrow { transform: rotate(90deg); }
+.nodi-wrap { padding: 0 12px 12px; display: none; }
+.ramo.aperto .nodi-wrap { display: block; }
+.nodo {
+  background: rgba(255,255,255,0.75);
+  border-radius: 10px;
+  padding: 9px 12px;
+  margin-top: 8px;
+  font-size: 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.nodo-emoji { font-size: 18px; flex-shrink: 0; margin-top: 2px; }
+.nodo-text { color: #3d3d3a; line-height: 1.55; }
+.nodo-label { font-weight: 700; }
+.approfondimento-btn {
+  margin-top: 7px;
+  background: rgba(255,255,255,0.85);
+  border: 1px solid rgba(0,0,0,0.13);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  color: #555;
+  display: inline-block;
+  font-family: inherit;
+}
+.approfondimento-btn:hover { background: #fff; }
+.approfondimento-box {
+  background: #fffdf5;
+  border-left: 3px solid #C85A10;
+  border-radius: 0 8px 8px 0;
+  padding: 10px 12px;
+  margin-top: 8px;
+  font-size: 13px;
+  color: #4a4030;
+  line-height: 1.6;
+  display: none;
+}
+.approfondimento-box.visibile { display: block; }
+.approfondimento-titolo { font-weight: 700; color: #8B3A08; margin-bottom: 4px; font-size: 13px; }
+
+/* Colori rami */
+.ramo-quando { background: #FEF0DC; border-color: #F0A030; }
+.ramo-quando .ramo-header { background: #F5B850; color: #6A3200; }
+.ramo-specie { background: #FAE8E0; border-color: #D05030; }
+.ramo-specie .ramo-header { background: #E07050; color: #fff; }
+.ramo-vita { background: #E8F5E0; border-color: #4A9030; }
+.ramo-vita .ramo-header { background: #5A9840; color: #fff; }
+.ramo-fuoco { background: #FDE8D0; border-color: #E05010; }
+.ramo-fuoco .ramo-header { background: #E86830; color: #fff; }
+.ramo-strumenti { background: #E4EEF8; border-color: #3070B0; }
+.ramo-strumenti .ramo-header { background: #4880C0; color: #fff; }
+.ramo-arte { background: #F0E4F8; border-color: #8050B0; }
+.ramo-arte .ramo-header { background: #9060C0; color: #fff; }
+
+/* Stampa */
+@media print {
+  .font-controls { display: none; }
+  .ramo.aperto .nodi-wrap, .nodi-wrap { display: block !important; }
+  .approfondimento-box { display: block !important; }
+  .ramo-arrow { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="mappa-wrap" id="mappaWrap">
+  <div class="top-bar">
+    <div class="mappa-title">🦴 IL PALEOLITICO</div>
+    <div class="font-controls">
+      <button class="font-btn" onclick="cambiaFont(-1)">A−</button>
+      <button class="font-btn" onclick="cambiaFont(1)">A+</button>
+    </div>
+  </div>
+  <div class="mappa-subtitle">Tocca ogni ramo per esplorarlo • Tocca 🔍 per gli approfondimenti</div>
+
+  <div class="central-node">
+    <div class="central-emoji">🪨</div>
+    <div>Età della pietra<br>scheggiata</div>
+  </div>
+
+  <div class="rami-grid">
+
+    <!-- RAMO 1: QUANDO -->
+    <div class="ramo ramo-quando" id="ramo1">
+      <div class="ramo-header" onclick="toggleRamo('ramo1')">
+        <span class="ramo-emoji">⏳</span>
+        <span class="ramo-titolo">Quando</span>
+        <span class="ramo-arrow">▶</span>
+      </div>
+      <div class="nodi-wrap">
+        <div class="nodo"><span class="nodo-emoji">📅</span><div class="nodo-text"><span class="nodo-label">Durata:</span> da 3,3 milioni a 10.000 anni fa</div></div>
+        <div class="nodo"><span class="nodo-emoji">1️⃣</span><div class="nodo-text"><span class="nodo-label">Inferiore:</span> da 3,3 milioni a 250.000 anni fa</div></div>
+        <div class="nodo"><span class="nodo-emoji">2️⃣</span><div class="nodo-text"><span class="nodo-label">Medio:</span> da 250.000 a 40.000 anni fa</div></div>
+        <div class="nodo"><span class="nodo-emoji">3️⃣</span><div class="nodo-text"><span class="nodo-label">Superiore:</span> da 40.000 a 10.000 anni fa</div></div>
+        <div class="nodo"><span class="nodo-emoji">📖</span><div class="nodo-text">
+          <span class="nodo-label">Il nome:</span> significa "età della pietra antica"
+          <br><button class="approfondimento-btn" onclick="toggleApp('app-nome')">🔍 Perché si chiama così?</button>
+          <div class="approfondimento-box" id="app-nome">
+            <div class="approfondimento-titolo">🪨 Pietra scheggiata</div>
+            Per tutta la durata del Paleolitico, gli ominini realizzarono strumenti a partire dalla pietra, scheggiate in modo grossolano. Per questo il Paleolitico è detto anche <strong>"età della pietra scheggiata"</strong>.
+          </div>
+        </div></div>
+      </div>
+    </div>
+
+    <!-- RAMO 2: LE SPECIE -->
+    <div class="ramo ramo-specie" id="ramo2">
+      <div class="ramo-header" onclick="toggleRamo('ramo2')">
+        <span class="ramo-emoji">👣</span>
+        <span class="ramo-titolo">Le specie umane</span>
+        <span class="ramo-arrow">▶</span>
+      </div>
+      <div class="nodi-wrap">
+        <div class="nodo"><span class="nodo-emoji">🦴</span><div class="nodo-text"><span class="nodo-label">Australopiteco:</span> da 4 a 2,5 milioni di anni fa</div></div>
+        <div class="nodo"><span class="nodo-emoji">🛠️</span><div class="nodo-text">
+          <span class="nodo-label">Homo habilis:</span> comparso 2,5 milioni di anni fa — crea i primi strumenti
+          <br><button class="approfondimento-btn" onclick="toggleApp('app-habilis')">🔍 Il Chopper di Olduvai</button>
+          <div class="approfondimento-box" id="app-habilis">
+            <div class="approfondimento-titolo">🪨 Chopper di Olduvai — Tanzania</div>
+            Trovato nel 1931 dal paleontologo Louis Leakey nella gola di Olduvai (Tanzania). Risale a 1,8-2 milioni di anni fa. È uno degli strumenti più diffusi dell'Homo habilis: serviva per colpire o tagliare ed è tra i <strong>primi utensili della storia umana</strong>.
+          </div>
+        </div></div>
+        <div class="nodo"><span class="nodo-emoji">🚶</span><div class="nodo-text">
+          <span class="nodo-label">Homo erectus / ergaster:</span> cammina eretto — si sposta dall'Africa in Asia e in Europa
+          <br><button class="approfondimento-btn" onclick="toggleApp('app-erectus')">🔍 I primi passi dell'umanità</button>
+          <div class="approfondimento-box" id="app-erectus">
+            <div class="approfondimento-titolo">👣 Impronte fossili — Eritrea</div>
+            Scoperte in Eritrea nel 2016 da un gruppo di studiosi italiani ed eritrei. Risalgono a 800.000 anni fa. Le impronte ci dicono che l'Homo erectus era abile nella camminata e nella corsa su due gambe. <strong>Si spostò dall'Africa verso Asia ed Europa</strong> — forse per cercare cibo.
+          </div>
+        </div></div>
+        <div class="nodo"><span class="nodo-emoji">❄️</span><div class="nodo-text">
+          <span class="nodo-label">Neanderthal:</span> visse in Europa e Medio Oriente, tra 300.000 e 40.000 anni fa
+          <br><button class="approfondimento-btn" onclick="toggleApp('app-nean')">🔍 Chi erano i Neanderthal?</button>
+          <div class="approfondimento-box" id="app-nean">
+            <div class="approfondimento-titolo">❄️ Neanderthal — Europa e Medio Oriente</div>
+            L'unica specie di Homo nata in Europa (non in Africa). Vivevano in zone fredde: ossa robuste, grandi arcate sopraccigliari e naso grande li proteggevano dal freddo. Alimentazione onnivora. Curavano i malati con le piante. Seppellivano i morti con <strong>riti funebri</strong>. La loro specie si è fusa con la nostra!
+          </div>
+        </div></div>
+        <div class="nodo"><span class="nodo-emoji">🧠</span><div class="nodo-text"><span class="nodo-label">Homo sapiens:</span> comparso 200.000 anni fa in Africa orientale — siamo noi!</div></div>
+      </div>
+    </div>
+
+    <!-- RAMO 3: VITA QUOTIDIANA -->
+    <div class="ramo ramo-vita" id="ramo3">
+      <div class="ramo-header" onclick="toggleRamo('ramo3')">
+        <span class="ramo-emoji">🏕️</span>
+        <span class="ramo-titolo">Come vivevano</span>
+        <span class="ramo-arrow">▶</span>
+      </div>
+      <div class="nodi-wrap">
+        <div class="nodo"><span class="nodo-emoji">🚶</span><div class="nodo-text"><span class="nodo-label">Nomadi:</span> si spostavano in cerca di cibo</div></div>
+        <div class="nodo"><span class="nodo-emoji">👥</span><div class="nodo-text"><span class="nodo-label">Piccoli gruppi:</span> organizzati per sopravvivere insieme</div></div>
+        <div class="nodo"><span class="nodo-emoji">🌿</span><div class="nodo-text"><span class="nodo-label">Alimentazione:</span> raccolta (erbe, bacche, radici, miele), caccia, pesca</div></div>
+        <div class="nodo"><span class="nodo-emoji">👴</span><div class="nodo-text"><span class="nodo-label">Anziani:</span> tenuti in grande considerazione — custodivano le conoscenze</div></div>
+        <div class="nodo"><span class="nodo-emoji">🏘️</span><div class="nodo-text">
+          <span class="nodo-label">Paleolitico superiore:</span> comunità di 6-200 persone — prime forme di villaggio
+          <br><button class="approfondimento-btn" onclick="toggleApp('app-vita-nord')">🔍 La vita al Nord</button>
+          <div class="approfondimento-box" id="app-vita-nord">
+            <div class="approfondimento-titolo">❄️ In Europa e Asia — clima più rigido</div>
+            Il freddo rese la caccia sempre più importante rispetto alla raccolta. Per cacciare grandi animali serviva <strong>agire in gruppo</strong> e organizzarsi. Il fuoco divenne il centro della vita sociale. Si divisero i compiti: le donne si occupavano della raccolta e dei bambini, gli uomini della caccia.
+          </div>
+        </div></div>
+      </div>
+    </div>
+
+    <!-- RAMO 4: IL FUOCO -->
+    <div class="ramo ramo-fuoco" id="ramo4">
+      <div class="ramo-header" onclick="toggleRamo('ramo4')">
+        <span class="ramo-emoji">🔥</span>
+        <span class="ramo-titolo">Il fuoco</span>
+        <span class="ramo-arrow">▶</span>
+      </div>
+      <div class="nodi-wrap">
+        <div class="nodo"><span class="nodo-emoji">👣</span><div class="nodo-text"><span class="nodo-label">Chi:</span> scoperto dall'Homo erectus</div></div>
+        <div class="nodo"><span class="nodo-emoji">🍖</span><div class="nodo-text"><span class="nodo-label">Cuocere:</span> la carne cotta distruggeva i batteri — ci si ammalava di meno</div></div>
+        <div class="nodo"><span class="nodo-emoji">🌡️</span><div class="nodo-text"><span class="nodo-label">Scaldarsi:</span> permise di vivere in zone più fredde</div></div>
+        <div class="nodo"><span class="nodo-emoji">🐺</span><div class="nodo-text"><span class="nodo-label">Proteggersi:</span> teneva lontani gli animali feroci</div></div>
+        <div class="nodo"><span class="nodo-emoji">💬</span><div class="nodo-text"><span class="nodo-label">Comunicare:</span> il fuoco acceso favorì lo sviluppo del linguaggio</div></div>
+      </div>
+    </div>
+
+    <!-- RAMO 5: STRUMENTI -->
+    <div class="ramo ramo-strumenti" id="ramo5">
+      <div class="ramo-header" onclick="toggleRamo('ramo5')">
+        <span class="ramo-emoji">🪨</span>
+        <span class="ramo-titolo">Gli strumenti</span>
+        <span class="ramo-arrow">▶</span>
+      </div>
+      <div class="nodi-wrap">
+        <div class="nodo"><span class="nodo-emoji">🪓</span><div class="nodo-text"><span class="nodo-label">Chopper:</span> prima pietra scheggiata — colpisce e taglia</div></div>
+        <div class="nodo"><span class="nodo-emoji">🔪</span><div class="nodo-text"><span class="nodo-label">Raschiatoio:</span> lato piatto per pulire le pelli</div></div>
+        <div class="nodo"><span class="nodo-emoji">🪚</span><div class="nodo-text"><span class="nodo-label">Denticolato:</span> lato con "denti" per tagliare</div></div>
+        <div class="nodo"><span class="nodo-emoji">🏹</span><div class="nodo-text"><span class="nodo-label">Propulsore e frecce:</span> lanciare a distanza — inventato dai Sapiens</div></div>
+        <div class="nodo"><span class="nodo-emoji">🧵</span><div class="nodo-text"><span class="nodo-label">Ago:</span> per cucire le pelli — Paleolitico superiore</div></div>
+        <div class="nodo"><span class="nodo-emoji">🐟</span><div class="nodo-text"><span class="nodo-label">Arpione e nassa:</span> per pescare</div></div>
+        <div class="nodo"><span class="nodo-emoji">🗺️</span><div class="nodo-text">
+          <span class="nodo-label">In Italia:</span> molti siti importanti
+          <br><button class="approfondimento-btn" onclick="toggleApp('app-italia')">🔍 Il Paleolitico in Italia</button>
+          <div class="approfondimento-box" id="app-italia">
+            <div class="approfondimento-titolo">🇮🇹 Siti paleolitici in Italia</div>
+            Balzi Rossi (Liguria), Val Camonica (Lombardia), Grotta Guattari al Circeo (Lazio) dove sono stati trovati <strong>resti di 9 Neanderthal</strong> che vivevano con mammut, cervi nobili e cavalli. Altamura (Puglia), Grotta dell'Addaura (Sicilia), Ponte di Veja (Veneto).
+          </div>
+        </div></div>
+      </div>
+    </div>
+
+    <!-- RAMO 6: ARTE -->
+    <div class="ramo ramo-arte" id="ramo6">
+      <div class="ramo-header" onclick="toggleRamo('ramo6')">
+        <span class="ramo-emoji">🎨</span>
+        <span class="ramo-titolo">Arte e religione</span>
+        <span class="ramo-arrow">▶</span>
+      </div>
+      <div class="nodi-wrap">
+        <div class="nodo"><span class="nodo-emoji">🖼️</span><div class="nodo-text"><span class="nodo-label">Pitture rupestri:</span> disegni sulle pareti delle grotte</div></div>
+        <div class="nodo"><span class="nodo-emoji">🗿</span><div class="nodo-text">
+          <span class="nodo-label">Sculture e veneri:</span> statue di donne tondeggianti — portafortuna o divinità
+          <br><button class="approfondimento-btn" onclick="toggleApp('app-arte')">🔍 L'arte nel Paleolitico superiore</button>
+          <div class="approfondimento-box" id="app-arte">
+            <div class="approfondimento-titolo">🎨 Arte del Paleolitico superiore</div>
+            Oltre alle sculture, donne e uomini del Paleolitico superiore realizzavano <strong>ornamenti</strong> come collane di conchiglie, bracciali e ciondoli. Sono stati trovati anche <strong>strumenti musicali</strong> come flauti e fischietti. A Liguria è stata trovata la testa di un ragazzo sepolta con tantissime conchiglie.
+          </div>
+        </div></div>
+        <div class="nodo"><span class="nodo-emoji">🎵</span><div class="nodo-text"><span class="nodo-label">Musica:</span> flauti e fischietti ritrovati</div></div>
+        <div class="nodo"><span class="nodo-emoji">⚰️</span><div class="nodo-text"><span class="nodo-label">Riti funebri:</span> i Neanderthal furono i primi a seppellire i morti</div></div>
+        <div class="nodo"><span class="nodo-emoji">👗</span><div class="nodo-text"><span class="nodo-label">Abbigliamento:</span> pelli cucite con aghi di osso</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function toggleRamo(id) {
+  document.getElementById(id).classList.toggle('aperto');
+}
+function toggleApp(id) {
+  document.getElementById(id).classList.toggle('visibile');
+}
+let fontDelta = 0;
+function cambiaFont(dir) {
+  fontDelta = Math.max(-2, Math.min(4, fontDelta + dir));
+  document.getElementById('mappaWrap').style.fontSize = (14 + fontDelta) + 'px';
+}
+</script>
+</body>
+</html>

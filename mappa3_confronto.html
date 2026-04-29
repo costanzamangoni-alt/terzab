@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Confronto: Paleolitico vs Neolitico — Mappa interattiva</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  background: #F8F4FF;
+  padding: 16px;
+}
+.mappa-wrap {
+  max-width: 720px;
+  margin: 0 auto;
+  background: #F8F4FF;
+  border-radius: 20px;
+  padding: 24px 20px 36px;
+}
+.top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.mappa-title { font-size: 20px; font-weight: 800; color: #3A1A6A; }
+.font-controls { display: flex; gap: 6px; }
+.font-btn {
+  background: #DDD0F8; border: 1px solid #9070D0; color: #3A1A6A;
+  border-radius: 8px; padding: 4px 12px; font-size: 13px; cursor: pointer; font-weight: 700;
+}
+.font-btn:hover { background: #C8B0F0; }
+.subtitle { text-align: center; font-size: 12px; color: #7050A8; margin-bottom: 20px; }
+
+.col-headers {
+  display: grid; grid-template-columns: 1fr 56px 1fr; gap: 0;
+  margin-bottom: 18px; position: sticky; top: 0; z-index: 10;
+  background: #F8F4FF; padding: 4px 0 8px;
+}
+.col-head { border-radius: 16px; padding: 14px 10px 12px; text-align: center; }
+.col-head-paleo { background: #C85A10; }
+.col-head-neo { background: #2E8B2E; }
+.col-head-emoji { font-size: 30px; display: block; margin-bottom: 6px; }
+.col-head-name { font-size: 16px; font-weight: 800; color: #fff; display: block; }
+.col-head-date { font-size: 11px; color: rgba(255,255,255,0.82); display: block; margin-top: 3px; }
+
+.categoria { margin-bottom: 20px; border-radius: 18px; overflow: hidden; border: 2px solid transparent; }
+.cat-header {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 11px 16px; font-weight: 700; font-size: 15px; text-align: center; cursor: pointer;
+}
+.cat-header:hover { filter: brightness(0.95); }
+.cat-emoji { font-size: 22px; }
+.cat-arrow { font-size: 13px; transition: transform 0.25s; margin-left: 4px; }
+.categoria.aperta .cat-arrow { transform: rotate(90deg); }
+
+.cat-body {
+  display: none; grid-template-columns: 1fr 56px 1fr;
+  gap: 0; padding: 12px 12px 14px;
+}
+.categoria.aperta .cat-body { display: grid; }
+
+.cella { border-radius: 14px; padding: 14px 16px; line-height: 1.6; font-size: 14px; }
+.cella-paleo { background: #FFF0DC; border: 2px solid #E07820; color: #5A2800; }
+.cella-neo { background: #E4F5DC; border: 2px solid #3A9A3A; color: #0E3A0E; }
+.cella-titolo { font-weight: 800; font-size: 15px; margin-bottom: 8px; display: block; }
+.cella-voce { display: flex; align-items: flex-start; gap: 6px; margin-bottom: 5px; font-size: 13px; }
+.cella-voce-emoji { flex-shrink: 0; font-size: 15px; margin-top: 1px; }
+
+.vs-col { display: flex; align-items: center; justify-content: center; }
+.vs-badge {
+  background: #9060C0; color: #fff; border-radius: 50%;
+  width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 800; flex-shrink: 0;
+}
+
+.differenza {
+  grid-column: 1 / -1; background: #EDE0FF; border-radius: 10px;
+  padding: 9px 14px; font-size: 13px; color: #3A1A6A;
+  margin-top: 10px; display: flex; gap: 8px; align-items: flex-start; line-height: 1.5;
+}
+.differenza-ico { font-size: 16px; flex-shrink: 0; }
+
+/* Colori categorie */
+.cat-dove { background: #FFF8F0; border-color: #E08040; }
+.cat-dove .cat-header { background: #E89050; color: #fff; }
+.cat-cibo { background: #FFFAF0; border-color: #D0A020; }
+.cat-cibo .cat-header { background: #D8A830; color: #fff; }
+.cat-strum { background: #F0F4FF; border-color: #4060C0; }
+.cat-strum .cat-header { background: #5070D0; color: #fff; }
+.cat-soc { background: #F8F0FF; border-color: #8040B0; }
+.cat-soc .cat-header { background: #9050C0; color: #fff; }
+.cat-natura { background: #F0FFF4; border-color: #309030; }
+.cat-natura .cat-header { background: #409040; color: #fff; }
+.cat-arte { background: #FFF0F8; border-color: #C03080; }
+.cat-arte .cat-header { background: #C84090; color: #fff; }
+
+@media print {
+  .font-controls { display: none; }
+  .cat-body { display: grid !important; }
+  .cat-arrow { display: none; }
+  .col-headers { position: static; }
+}
+</style>
+</head>
+<body>
+<div class="mappa-wrap" id="mappaWrap">
+  <div class="top-bar">
+    <div class="mappa-title">⚖️ Paleolitico vs Neolitico</div>
+    <div class="font-controls">
+      <button class="font-btn" onclick="cambiaFont(-1)">A−</button>
+      <button class="font-btn" onclick="cambiaFont(1)">A+</button>
+    </div>
+  </div>
+  <div class="subtitle">Tocca ogni categoria per vedere le differenze</div>
+
+  <div class="col-headers">
+    <div class="col-head col-head-paleo">
+      <span class="col-head-emoji">🪨</span>
+      <span class="col-head-name">PALEOLITICO</span>
+      <span class="col-head-date">3,3 milioni → 10.000 anni fa</span>
+    </div>
+    <div></div>
+    <div class="col-head col-head-neo">
+      <span class="col-head-emoji">🌾</span>
+      <span class="col-head-name">NEOLITICO</span>
+      <span class="col-head-date">da 10.000 anni fa</span>
+    </div>
+  </div>
+
+  <!-- CATEGORIA 1: DOVE VIVEVANO -->
+  <div class="categoria cat-dove" id="cat1">
+    <div class="cat-header" onclick="toggleCat('cat1')">
+      <span class="cat-emoji">🏠</span>
+      <span>Dove vivevano</span>
+      <span class="cat-arrow">▶</span>
+    </div>
+    <div class="cat-body">
+      <div class="cella cella-paleo">
+        <span class="cella-titolo">🚶 Nomadi</span>
+        <div class="cella-voce"><span class="cella-voce-emoji">⛺</span><span>Grotte e accampamenti temporanei</span></div>
+        <div class="cella-voce"><span class="cella-voce-emoji">➡️</span><span>Si spostano sempre in cerca di cibo</span></div>
+        <div class="cella-voce"><span class="cella-voce-emoji">👥</span><span>Piccoli gruppi</span></div>
+      </div>
+      <div class="vs-col"><div class="vs-badge">VS</div></div>
+      <div class="cella cella-neo">
+        <span class="cella-titolo">🏘️ Stanziali</span>
+        <div class="cella-voce"><span class="cella-voce-emoji">🏠</span><span>Capanne solide, poi mattoni di argilla</span></div>
+        <div class="cella-voce"><span class="cella-voce-emoji">🏙️</span><span>Nasce il villaggio</span></div>
+        <div class="cella-voce"><span class="cella-voce-emoji">💧</span><span>Fossato, focolare, pozzi</span></div>
+      </div>
+      <div class="differenza">
+        <span class="differenza-ico">💡</span>
+        <span>L'agricoltura obbliga a restare fermi: <strong>dal nomadismo nasce il villaggio!</strong></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CATEGORIA 2: CIBO -->
+  <div class="categoria cat-cibo" id="cat2">
+    <div class="cat-header" onclick="toggleCat('cat2')">
+      <span class="cat-emoji">🍖</span>
+      <span>Come trovavano il cibo</span>
+      <span class="cat-arrow">▶</span>
+    </div>
+    <div class="cat-body">
+      <div class="cella cella-paleo">
+        <span class="cella-titolo">🌿 Raccolta e caccia</span>
+        <div class="cella-voce"><span class="cella-voce-emoji">🫐</span><span>Erbe, bacche, radici, miele</span></div>
+        <div class="cella-voce"><span class="cella-voce-emoji">🐗</span><span>Caccia e pesca</span></div>
+        <div class="cella-voce"><span class="cella-voce-emoji">🔍</span><span>Il cibo si cerca in natura</span></div>
+      </div>
+      <div class="vs-col"><div class="vs-badge">VS</div></div>
+      <div class="cella cella-neo">
+        <span class="cella-titolo">🌾 Agricoltura e allevamento</span>
+        <div class="cella-voce"><span class="cella-voce-emoji">🌱</span><span>Coltivano grano, orzo, riso, mais</span></div>
+        <div class="cella-voce"><span class="cella-voce-emoji">🐄</span><span>Allevano buoi, pecore, capre, maiali</span></div>
+        <div class="cella-voce"><span class="cella-voce-emoji">🏭</span><span>Il cibo si produce</span></div>
+      </div>
+      <div class="differenza">
+        <span class="differenza-ico">💡</span>
+        <span>Nel Neolitico il cibo non si cerca più: <strong>si coltiva e si alleva!</strong></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CATEGORIA 3: STRUMENTI -->
+  <div class="categoria cat-strum" id="cat3">
+    <div class="cat-header" onclick="toggleCat('cat3')">
+      <span class="cat-emoji">🛠️</span>
+      <span>Gli strumenti</span>
+      <span class="cat-arrow">▶</span>
+    </div>
+    <div class="cat-body">
+      <div class="cella cella-paleo">
+        <span class="cella-titolo">🪨 Pietra scheggiata</span>
+        <div class="cella-voce"><span class="cella-voce-emoji">🪓</span><span>Chopper, raschiatoio, denticolato</span></div>
+        <div class="cella-voce"><span class="cella-voce-emoji">🏹</span><span>Propulsore, frecce, ago, arpione</span></div>
+        <div class="cella-voce"><span class="cella-voce-emoji">🎯</span><span>Per cacciare, tagliare, cucire</span></div>
+      </div>
+      <div class="vs-col"><div class="vs-badge">VS</div></div>
+      <div class="cella cella-neo">
+        <span class="cella-titolo">✨ Pietra levigata</span>
+        <div class="cella-voce"><span class="cella-voce-emoji">🌾</span><span>Falce, aratro, accetta</span></div>
+        <div class="cella-voce"><span class="cella-voce-emoji">🧵</span><span>Telaio per tessere</span></div>
+        <div class="cella-voce"><span class="cella-voce-emoji">🏺</span><span>Ceramica in argilla</span></div>
+      </div>
+      <div class="differenza">
+        <span class="differenza-ico">💡</span>
+        <span>Nel Neolitico le pietre vengono <strong>levigate</strong> — nascono attrezzi nuovi per coltivare, costruire, tessere!</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CATEGORIA 4: ORGANIZZAZIONE -->
+  <div class="categoria cat-soc" id="cat4">
+    <div class="cat-header" onclick="toggleCat('cat4')">
+      <span class="cat-emoji">👥</span>
+      <span>Come si organizzavano</span>
+      <span class="cat-arrow">▶</span>
+    </div>
+    <div class="cat-body">
+      <div class="cella cella-paleo">
+        <span class="cella-titolo">👣 Piccoli gruppi</span>
+        <div class="cella-voce"><span class="cella-voce-emoji">🔢</span><span>Pochi individui, pochi figli</span></div>
+        <div class="cella-voce"><span class="cella-voce-emoji">👴</span><span>Gli anziani custodivano le conoscenze</span></div>
+        <div class="cella-voce"><span class="cella-voce-emoji">⚖️</span><span>Tutti avevano un ruolo uguale</span></div>
+      </div>
+      <div class="vs-col"><div class="vs-badge">VS</div></div>
+      <div class="cella cella-neo">
+        <span class="cella-titolo">🏘️ Villaggi e clan</span>
+        <div class="cella-voce"><span class="cella-voce-emoji">👨‍👩‍👧</span><span>Famiglie allargate (clan)</span></div>
+        <div class="cella-voce"><span class="cella-voce-emoji">⚙️</span><span>Nascono lavori specializzati</span></div>
+        <div class="cella-voce"><span class="cella-voce-emoji">♀️♂️</span><span>Divisione dei compiti uomo/donna</span></div>
+      </div>
+      <div class="differenza">
+        <span class="differenza-ico">💡</span>
+        <span>Nel Neolitico la società diventa più grande e complessa: <strong>nascono ruoli e mestieri diversi!</strong></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CATEGORIA 5: NATURA -->
+  <div class="categoria cat-natura" id="cat5">
+    <div class="cat-header" onclick="toggleCat('cat5')">
+      <span class="cat-emoji">🌿</span>
+      <span>Rapporto con la natura</span>
+      <span class="cat-arrow">▶</span>
+    </div>
+    <div class="cat-body">
+      <div class="cella cella-paleo">
+        <span class="cella-titolo">🌍 In equilibrio</span>
+        <div class="cella-voce"><span class="cella-voce-emoji">🐘</span><span>Gli ominini non erano dominanti</span></div>
+        <div class="cella-voce"><span class="cella-voce-emoji">🌳</span><span>Vivevano dentro la natura</span></div>
+        <div class="cella-voce"><span class="cella-voce-emoji">♻️</span><span>Prendevano solo ciò che serviva</span></div>
+      </div>
+      <div class="vs-col"><div class="vs-badge">VS</div></div>
+      <div class="cella cella-neo">
+        <span class="cella-titolo">🌾 Trasformano la natura</span>
+        <div class="cella-voce"><span class="cella-voce-emoji">🌲</span><span>Tagliano foreste per coltivare</span></div>
+        <div class="cella-voce"><span class="cella-voce-emoji">💧</span><span>Irrigano i campi</span></div>
+        <div class="cella-voce"><span class="cella-voce-emoji">🏗️</span><span>Modificano il territorio intorno a sé</span></div>
+      </div>
+      <div class="differenza">
+        <span class="differenza-ico">💡</span>
+        <span>Nel Neolitico l'essere umano inizia a <strong>trasformare il mondo</strong> in modo profondo e irreversibile!</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CATEGORIA 6: ARTE -->
+  <div class="categoria cat-arte" id="cat6">
+    <div class="cat-header" onclick="toggleCat('cat6')">
+      <span class="cat-emoji">🎨</span>
+      <span>Arte e credenze</span>
+      <span class="cat-arrow">▶</span>
+    </div>
+    <div class="cat-body">
+      <div class="cella cella-paleo">
+        <span class="cella-titolo">🖼️ Arte rupestre</span>
+        <div class="cella-voce"><span class="cella-voce-emoji">🗿</span><span>Sculture, Veneri del Paleolitico</span></div>
+        <div class="cella-voce"><span class="cella-voce-emoji">🎵</span><span>Flauti e fischietti</span></div>
+        <div class="cella-voce"><span class="cella-voce-emoji">⚰️</span><span>Riti funebri (Neanderthal)</span></div>
+      </div>
+      <div class="vs-col"><div class="vs-badge">VS</div></div>
+      <div class="cella cella-neo">
+        <span class="cella-titolo">🏺 Arte e religione</span>
+        <div class="cella-voce"><span class="cella-voce-emoji">🏺</span><span>Ceramiche decorate</span></div>
+        <div class="cella-voce"><span class="cella-voce-emoji">🌸</span><span>Dea Madre — culto della fertilità</span></div>
+        <div class="cella-voce"><span class="cella-voce-emoji">🏙️</span><span>Villaggi come luoghi di culto</span></div>
+      </div>
+      <div class="differenza">
+        <span class="differenza-ico">💡</span>
+        <span>Nel Neolitico la religione si lega alla terra: <strong>nasce il culto della Dea Madre!</strong></span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function toggleCat(id) { document.getElementById(id).classList.toggle('aperta'); }
+let fontDelta = 0;
+function cambiaFont(dir) {
+  fontDelta = Math.max(-2, Math.min(4, fontDelta + dir));
+  document.getElementById('mappaWrap').style.fontSize = (14 + fontDelta) + 'px';
+}
+</script>
+</body>
+</html>

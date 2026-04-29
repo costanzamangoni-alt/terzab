@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gioco 2 — Il Neolitico</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--neo:#2E8B2E;--neo-light:#E4F5DC;--neo-dark:#1A5010;--green:#2E7D32;--bg:#F0FAF0;--card:#fff;--radius:14px;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:var(--bg);padding:16px;}
+.game-wrap{max-width:680px;margin:0 auto;}
+.game-header{background:var(--neo);border-radius:20px;padding:16px 20px;margin-bottom:18px;display:flex;align-items:center;gap:12px;}
+.game-header-emoji{font-size:36px;}
+.game-header h1{color:#fff;font-size:20px;font-weight:800;line-height:1.2;}
+.game-header p{color:rgba(255,255,255,0.85);font-size:13px;margin-top:3px;}
+.tabs{display:flex;gap:8px;margin-bottom:18px;}
+.tab{flex:1;padding:10px 6px;border-radius:12px;border:2.5px solid #C0DCC0;background:var(--card);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;text-align:center;color:#aaa;transition:all .2s;}
+.tab:hover{border-color:var(--neo);color:var(--neo);}
+.tab.active{background:var(--neo);border-color:var(--neo);color:#fff;}
+.tab.done{border-color:var(--green);color:var(--green);}
+.tab.done.active{background:var(--green);border-color:var(--green);color:#fff;}
+.sezione{display:none;}.sezione.attiva{display:block;}
+.sezione-title{font-size:18px;font-weight:800;color:var(--neo-dark);margin-bottom:4px;}
+.sezione-desc{font-size:13px;color:#777;margin-bottom:16px;}
+.col-container{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.col-col h3{font-size:13px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;text-align:center;}
+.col-item{background:var(--card);border:2.5px solid #C0DCC0;border-radius:var(--radius);padding:10px 14px;margin-bottom:8px;cursor:pointer;font-size:13px;font-weight:600;text-align:center;line-height:1.4;transition:all .2s;user-select:none;}
+.col-item:hover{border-color:var(--neo);background:var(--neo-light);}
+.col-item.selected{border-color:var(--neo);background:var(--neo-light);box-shadow:0 0 0 3px rgba(46,139,46,0.2);}
+.col-item.matched{border-color:#1A7A1A;background:#D4F0D4;color:#1A5010;pointer-events:none;}
+.col-item.wrong{border-color:#E53935;background:#FFEBEE;animation:shake .3s;}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.memory-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
+.mem-card{border-radius:12px;cursor:pointer;min-height:78px;}
+.mem-inner{width:100%;min-height:78px;position:relative;transform-style:preserve-3d;transition:transform .4s;}
+.mem-card.flipped .mem-inner{transform:rotateY(180deg);}
+.mem-front,.mem-back{position:absolute;inset:0;border-radius:12px;display:flex;align-items:center;justify-content:center;backface-visibility:hidden;padding:8px;text-align:center;line-height:1.35;}
+.mem-front{background:var(--neo);color:#fff;font-size:22px;}
+.mem-back{background:var(--card);border:2.5px solid var(--neo);color:var(--neo-dark);transform:rotateY(180deg);}
+.mem-back.is-term{font-size:13px;font-weight:800;color:var(--neo-dark);}
+.mem-back.is-def{font-size:11px;font-weight:600;color:#555;}
+.mem-card.matched .mem-front{background:#1A7A1A;}
+.mem-card.matched .mem-back{border-color:#1A7A1A;color:#1A5010;}
+.mem-info{text-align:center;font-size:13px;color:#999;margin-bottom:12px;}
+.mem-info span{font-weight:700;color:var(--neo);}
+.quiz-progress{font-size:12px;color:#aaa;margin-bottom:6px;}
+.quiz-q{background:var(--card);border-radius:var(--radius);padding:16px 18px;margin-bottom:14px;box-shadow:0 3px 12px rgba(0,0,0,0.08);}
+.quiz-q-text{font-size:15px;font-weight:700;color:#333;line-height:1.5;}
+.quiz-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;}
+.quiz-opt{background:#F0FFF0;border:2px solid #A0D0A0;border-radius:10px;padding:10px 12px;cursor:pointer;font-size:13px;font-weight:600;text-align:left;transition:all .2s;line-height:1.4;font-family:inherit;}
+.quiz-opt:hover:not(.disabled){background:#D4F0D4;border-color:var(--neo);}
+.quiz-opt.correct{background:#E8F5E9;border-color:var(--green);color:var(--green);}
+.quiz-opt.wrong{background:#FFEBEE;border-color:#E53935;color:#E53935;}
+.quiz-opt.disabled{pointer-events:none;opacity:.7;}
+.quiz-feedback{font-size:13px;font-weight:700;margin-top:10px;min-height:20px;}
+.quiz-feedback.ok{color:var(--green);}.quiz-feedback.no{color:#E53935;}
+.btn{background:var(--neo);color:#fff;border:none;border-radius:12px;padding:12px 24px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .2s;display:inline-block;}
+.btn:hover{background:var(--neo-dark);transform:translateY(-1px);}
+.btn-center{text-align:center;margin-top:16px;}
+.btn-secondary{background:#C0DCC0;color:#1A5010;}.btn-secondary:hover{background:#A0C8A0;}
+.fine-sez{background:var(--neo-light);border:2px solid var(--neo);border-radius:16px;padding:20px;text-align:center;margin-top:16px;}
+.fine-sez-emoji{font-size:40px;margin-bottom:8px;}
+.fine-sez h3{font-size:18px;font-weight:800;color:var(--neo-dark);}
+.fine-sez p{font-size:13px;color:#2A5A2A;margin-top:6px;}
+.stelle{font-size:32px;letter-spacing:4px;margin:8px 0;}
+</style>
+</head>
+<body>
+<div class="game-wrap">
+  <div class="game-header">
+    <div class="game-header-emoji">🌾</div>
+    <div><h1>Gioco 2 — Il Neolitico</h1><p>3 attività: collegamento • memory • quiz</p></div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" id="tab1" onclick="goSez(1)">🔗 Collegamento</button>
+    <button class="tab" id="tab2" onclick="goSez(2)">🃏 Memory</button>
+    <button class="tab" id="tab3" onclick="goSez(3)">❓ Quiz</button>
+  </div>
+  <div class="sezione attiva" id="sez1">
+    <div class="sezione-title">🔗 Collegamento</div>
+    <div class="sezione-desc">Tocca un termine a sinistra, poi la definizione giusta a destra!</div>
+    <div class="col-container">
+      <div class="col-col">
+        <h3>Termine</h3>
+        <div class="col-item" id="t1" onclick="selTerm('t1','Neolitico')">🌱 Neolitico</div>
+        <div class="col-item" id="t2" onclick="selTerm('t2','Stanziale')">🏠 Stanziale</div>
+        <div class="col-item" id="t3" onclick="selTerm('t3','Agricoltura')">🌾 Agricoltura</div>
+        <div class="col-item" id="t4" onclick="selTerm('t4','Allevamento')">🐄 Allevamento</div>
+        <div class="col-item" id="t5" onclick="selTerm('t5','Villaggio')">🏘️ Villaggio</div>
+        <div class="col-item" id="t6" onclick="selTerm('t6','Focolare')">🔥 Focolare</div>
+        <div class="col-item" id="t7" onclick="selTerm('t7','CatalH')">🏺 Çatal Hüyük</div>
+        <div class="col-item" id="t8" onclick="selTerm('t8','DeaMadre')">🌸 Dea Madre</div>
+      </div>
+      <div class="col-col">
+        <h3>Definizione</h3>
+        <div class="col-item" id="d1" onclick="selDef('d1','Neolitico')">Il periodo della grande rivoluzione — inizia 10.000 anni fa</div>
+        <div class="col-item" id="d2" onclick="selDef('d2','Agricoltura')">Coltivare la terra per produrre il proprio cibo</div>
+        <div class="col-item" id="d3" onclick="selDef('d3','Villaggio')">Insieme di abitazioni costruite vicine, con famiglie e lavori diversi</div>
+        <div class="col-item" id="d4" onclick="selDef('d4','Stanziale')">Chi vive sempre nello stesso posto senza spostarsi</div>
+        <div class="col-item" id="d5" onclick="selDef('d5','DeaMadre')">Divinità della fertilità della Terra — venerata nel Neolitico</div>
+        <div class="col-item" id="d6" onclick="selDef('d6','Allevamento')">Tenere e prendersi cura degli animali domestici</div>
+        <div class="col-item" id="d7" onclick="selDef('d7','Focolare')">Spazio per cucinare e scaldarsi dentro la capanna</div>
+        <div class="col-item" id="d8" onclick="selDef('d8','CatalH')">Antico villaggio neolitico in Turchia — si entrava dal tetto!</div>
+      </div>
+    </div>
+    <div id="col-msg" style="text-align:center;font-size:14px;font-weight:700;min-height:24px;margin-top:10px;color:var(--green);"></div>
+  </div>
+  <div class="sezione" id="sez2">
+    <div class="sezione-title">🃏 Memory</div>
+    <div class="sezione-desc">Trova le 10 coppie: ogni termine va abbinato alla sua definizione!</div>
+    <div class="mem-info">Coppie trovate: <span id="mem-score">0</span> / 10 &nbsp;|&nbsp; Tentativi: <span id="mem-tries">0</span></div>
+    <div class="memory-grid" id="memGrid"></div>
+    <div id="mem-fine" style="display:none">
+      <div class="fine-sez"><div class="fine-sez-emoji">🎉</div><h3>Hai trovato tutte le coppie!</h3><p id="mem-msg"></p></div>
+    </div>
+  </div>
+  <div class="sezione" id="sez3">
+    <div class="sezione-title">❓ Quiz a risposta multipla</div>
+    <div class="sezione-desc">Scegli la risposta giusta!</div>
+    <div id="quiz-domande-wrap">
+      <div class="quiz-progress" id="quiz-prog">Domanda 1 di 8</div>
+      <div class="quiz-q">
+        <div class="quiz-q-text" id="quiz-domanda"></div>
+        <div class="quiz-opts" id="quiz-opts"></div>
+        <div class="quiz-feedback" id="quiz-fb"></div>
+      </div>
+      <div class="btn-center" id="quiz-next-btn" style="display:none">
+        <button class="btn" id="quiz-next" onclick="nextQuiz()">Prossima ▶</button>
+      </div>
+    </div>
+    <div id="quiz-fine" style="display:none">
+      <div class="fine-sez"><div class="fine-sez-emoji">🏆</div><h3>Quiz completato!</h3><div class="stelle" id="stelle-quiz"></div><p id="msg-quiz"></p></div>
+      <div class="btn-center"><button class="btn btn-secondary" onclick="riavviaQuiz()">🔄 Rifai il quiz</button></div>
+    </div>
+  </div>
+</div>
+<script>
+let selTerm_=null,selDef_=null,colMatched=0;
+const coppie={'Neolitico':'d1','Stanziale':'d4','Agricoltura':'d2','Allevamento':'d6','Villaggio':'d3','Focolare':'d7','CatalH':'d8','DeaMadre':'d5'};
+function selTerm(id,key){if(document.getElementById(id).classList.contains('matched'))return;document.querySelectorAll('#sez1 .col-item').forEach(el=>{if(!el.classList.contains('matched'))el.classList.remove('selected');});selTerm_={id,key};document.getElementById(id).classList.add('selected');if(selDef_)tryMatch();}
+function selDef(id,key){if(document.getElementById(id).classList.contains('matched'))return;document.querySelectorAll('#sez1 .col-item').forEach(el=>{if(!el.classList.contains('matched'))el.classList.remove('selected');});selDef_={id,key};document.getElementById(id).classList.add('selected');if(selTerm_)tryMatch();}
+function tryMatch(){const t=selTerm_,d=selDef_;selTerm_=null;selDef_=null;if(coppie[t.key]===d.id){document.getElementById(t.id).classList.remove('selected');document.getElementById(d.id).classList.remove('selected');document.getElementById(t.id).classList.add('matched');document.getElementById(d.id).classList.add('matched');colMatched++;if(colMatched===8){document.getElementById('col-msg').textContent='🎉 Perfetto! Hai collegato tutto!';document.getElementById('tab1').classList.add('done');}}else{document.getElementById(t.id).classList.add('wrong');document.getElementById(d.id).classList.add('wrong');setTimeout(()=>{document.getElementById(t.id).classList.remove('wrong','selected');document.getElementById(d.id).classList.remove('wrong','selected');},700);}}
+const memPairs=[{id:'m1',term:'Rivoluzione neolitica',def:'Grandi cambiamenti irreversibili nella vita umana'},{id:'m2',term:'Cereali',def:'Piante come grano, orzo, riso e mais'},{id:'m3',term:'Falce',def:'Strumento per tagliare i cereali'},{id:'m4',term:'Aratro',def:'Solca il terreno per seminare'},{id:'m5',term:'Telaio',def:'Serve per tessere lana e fibre vegetali'},{id:'m6',term:'Ceramica',def:'Vasi di argilla per conservare il cibo'},{id:'m7',term:'Palafitte',def:"Capanne su pali costruite sull'acqua"},{id:'m8',term:'Clan',def:'Famiglia allargata che vive insieme nel villaggio'},{id:'m9',term:'Lupo',def:"Primo animale addomesticato dall'uomo per proteggere gli allevamenti"},{id:'m10',term:'Domesticare',def:'Rendere adatto alla vita con gli esseri umani'}];
+let memFlipped=[],memMatchedC=0,memTries=0,memLocked=false,memBuilt=false;
+function buildMemory(){if(memBuilt)return;memBuilt=true;const grid=document.getElementById('memGrid');grid.innerHTML='';const items=[];memPairs.forEach(p=>{items.push({uid:p.id+'_t',pairId:p.id,content:p.term,type:'term'});items.push({uid:p.id+'_d',pairId:p.id,content:p.def,type:'def'});});for(let i=items.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[items[i],items[j]]=[items[j],items[i]];}items.forEach(item=>{const card=document.createElement('div');card.className='mem-card';const bc=item.type==='term'?'is-term':'is-def';card.innerHTML=`<div class="mem-inner"><div class="mem-front">🌾</div><div class="mem-back ${bc}">${item.content}</div></div>`;card.onclick=()=>flipCard(card,item);grid.appendChild(card);});}
+function flipCard(card,item){if(memLocked||card.classList.contains('flipped')||card.classList.contains('matched'))return;card.classList.add('flipped');memFlipped.push({card,item});if(memFlipped.length===2){memLocked=true;memTries++;document.getElementById('mem-tries').textContent=memTries;const [a,b]=memFlipped;if(a.item.pairId===b.item.pairId&&a.item.type!==b.item.type){a.card.classList.add('matched');b.card.classList.add('matched');memMatchedC++;document.getElementById('mem-score').textContent=memMatchedC;memFlipped=[];memLocked=false;if(memMatchedC===10){const msgs=['Bravissimo/a! Conosci benissimo il Neolitico! 🌟','Ottimo! Tutte le coppie trovate! 🎊','Fantastico! Memoria da campione! 🏅'];document.getElementById('mem-msg').textContent=msgs[Math.floor(Math.random()*msgs.length)]+' ('+memTries+' tentativi)';document.getElementById('mem-fine').style.display='block';document.getElementById('tab2').classList.add('done');}}else{setTimeout(()=>{a.card.classList.remove('flipped');b.card.classList.remove('flipped');memFlipped=[];memLocked=false;},900);}}}
+const domande=[{q:'Quando inizia il Neolitico?',opts:['3,3 milioni di anni fa','250.000 anni fa','10.000 anni fa','40.000 anni fa'],c:2},{q:'Cosa significa "rivoluzione neolitica"?',opts:['Una guerra tra tribù','Grandi cambiamenti irreversibili nella vita umana','La scoperta del fuoco','La comparsa dei Sapiens'],c:1},{q:'Quale pianta NON viene coltivata nel Neolitico?',opts:['Grano','Orzo','Mais','Palma da cocco'],c:3},{q:'Come si chiama il villaggio neolitico scoperto in Turchia?',opts:['Olduvai','Çatal Hüyük','Rift Valley','Eritrea'],c:1},{q:"Come si entrava nelle abitazioni di Çatal Hüyük?",opts:['Da una porta sul davanti','Da una finestra laterale','Dal tetto','Da un tunnel sotterraneo'],c:2},{q:"A cosa serviva l'aratro nel Neolitico?",opts:['Tagliare i cereali','Pescare nei fiumi','Solcare il terreno per seminare','Tessere la lana'],c:2},{q:"Quale fu il primo animale addomesticato dall'uomo?",opts:['Il gatto','Il cavallo','La pecora','Il lupo'],c:3},{q:'Come si chiama la tecnica per fare i vasi di argilla nel Neolitico?',opts:['A spirale','A colombino','A strati','A stampo'],c:1}];
+let quizIdx=0,quizCorretti=0,quizBuilt=false;
+function buildQuiz(){if(quizBuilt)return;quizBuilt=true;showQuiz();}
+function showQuiz(){document.getElementById('quiz-fine').style.display='none';document.getElementById('quiz-domande-wrap').style.display='block';if(quizIdx>=domande.length){endQuiz();return;}const d=domande[quizIdx];document.getElementById('quiz-prog').textContent='Domanda '+(quizIdx+1)+' di 8';document.getElementById('quiz-domanda').textContent=d.q;document.getElementById('quiz-fb').textContent='';document.getElementById('quiz-next-btn').style.display='none';const opts=document.getElementById('quiz-opts');opts.innerHTML='';d.opts.forEach((o,i)=>{const btn=document.createElement('button');btn.className='quiz-opt';btn.textContent=o;btn.onclick=()=>answerQuiz(i,d.c,btn);opts.appendChild(btn);});}
+function answerQuiz(i,c,btn){document.querySelectorAll('.quiz-opt').forEach(b=>b.classList.add('disabled'));const fb=document.getElementById('quiz-fb');if(i===c){btn.classList.add('correct');fb.className='quiz-feedback ok';fb.textContent='✅ Esatto! Bravo/a!';quizCorretti++;}else{btn.classList.add('wrong');document.querySelectorAll('.quiz-opt')[c].classList.add('correct');fb.className='quiz-feedback no';fb.textContent='❌ Non proprio — la risposta giusta è evidenziata in verde.';}document.getElementById('quiz-next').textContent=quizIdx===domande.length-1?'Vedi risultati 🏆':'Prossima ▶';document.getElementById('quiz-next-btn').style.display='block';}
+function nextQuiz(){quizIdx++;showQuiz();}
+function endQuiz(){document.getElementById('quiz-domande-wrap').style.display='none';document.getElementById('quiz-next-btn').style.display='none';document.getElementById('quiz-fine').style.display='block';const pct=quizCorretti/domande.length;let stelle='',msg='';if(pct===1){stelle='⭐⭐⭐';msg='Perfetto! Tutte le risposte corrette. Sei un esperto/a del Neolitico!';}else if(pct>=0.75){stelle='⭐⭐';msg='Molto bene! Rileggi le parti che hai sbagliato sulla mappa e riprova!';}else{stelle='⭐';msg='Stai imparando! Rileggi la mappa del Neolitico e riprova. Ce la fai!';}document.getElementById('stelle-quiz').textContent=stelle;document.getElementById('msg-quiz').textContent=msg+' ('+quizCorretti+'/8 corrette)';document.getElementById('tab3').classList.add('done');}
+function riavviaQuiz(){quizIdx=0;quizCorretti=0;document.getElementById('tab3').classList.remove('done');showQuiz();}
+function goSez(n){document.querySelectorAll('.sezione').forEach(s=>s.classList.remove('attiva'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.getElementById('sez'+n).classList.add('attiva');document.getElementById('tab'+n).classList.add('active');if(n===2)buildMemory();if(n===3)buildQuiz();}
+</script>
+</body>
+</html>
