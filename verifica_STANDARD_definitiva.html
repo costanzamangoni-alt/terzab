@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verifica finale — Storia</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--primary:#6B21A8;--primary-light:#EDE9FE;--primary-dark:#4C1D95;--neo:#2E8B2E;--paleo:#C85A10;--green:#15803D;--red:#DC2626;--bg:#FAF5FF;--card:#fff;--radius:16px;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:var(--bg);padding:16px;}
+.wrap{max-width:680px;margin:0 auto;}
+.header{background:linear-gradient(135deg,var(--primary),#9333EA);border-radius:20px;padding:20px 24px;margin-bottom:20px;color:#fff;}
+.header h1{font-size:22px;font-weight:800;margin-bottom:4px;}
+.header p{font-size:13px;opacity:.88;}
+.header-meta{display:flex;gap:16px;margin-top:10px;font-size:12px;opacity:.85;flex-wrap:wrap;}
+.header-meta span{background:rgba(255,255,255,0.2);border-radius:8px;padding:3px 10px;font-weight:700;}
+.screen{display:none;}.screen.attiva{display:block;}
+.start-screen{text-align:center;padding:10px 0;}
+.start-emoji{font-size:56px;margin-bottom:12px;}
+.start-screen h2{font-size:22px;font-weight:800;color:var(--primary-dark);margin-bottom:8px;}
+.start-screen p{font-size:14px;color:#666;line-height:1.6;margin-bottom:6px;}
+.nome-input-wrap{margin:20px 0 10px;}
+.nome-input-wrap label{display:block;font-size:14px;font-weight:700;color:var(--primary-dark);margin-bottom:8px;}
+.nome-input{width:100%;padding:14px 16px;border:2.5px solid #DDD6FE;border-radius:14px;font-size:16px;font-family:inherit;font-weight:700;color:#333;outline:none;}
+.nome-input:focus{border-color:var(--primary);}
+.avviso{background:#FEF3C7;border:2px solid #F59E0B;border-radius:12px;padding:12px 16px;font-size:13px;color:#92400E;font-weight:700;margin:16px 0;line-height:1.5;text-align:left;}
+.btn-start{background:var(--primary);color:#fff;border:none;border-radius:14px;padding:16px 40px;font-size:18px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:8px;transition:all .2s;width:100%;}
+.btn-start:hover{background:var(--primary-dark);}
+.btn-start:disabled{opacity:.4;pointer-events:none;}
+.sez-header{background:var(--primary-light);border-radius:14px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;}
+.sez-header-ico{font-size:22px;}
+.sez-header-txt{font-size:15px;font-weight:800;color:var(--primary-dark);}
+.sez-header-sub{font-size:12px;color:#7C3AED;margin-top:2px;}
+/* COLLEGAMENTO */
+.col-istruzioni{background:#fff;border:2px solid #DDD6FE;border-radius:12px;padding:12px 16px;font-size:13px;color:#555;margin-bottom:14px;line-height:1.5;}
+.col-container{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;}
+.col-col h3{font-size:12px;font-weight:800;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;text-align:center;}
+.col-item{background:var(--card);border:2.5px solid #DDD6FE;border-radius:var(--radius);padding:11px 14px;margin-bottom:8px;cursor:pointer;font-size:13px;font-weight:600;text-align:center;line-height:1.4;transition:all .2s;user-select:none;position:relative;}
+.col-item:hover:not(.locked){border-color:var(--primary);background:var(--primary-light);}
+.col-item.selected{border-color:var(--primary);background:var(--primary-light);box-shadow:0 0 0 3px rgba(107,33,168,0.2);}
+.col-item.abbinato{border-color:#9333EA;background:#F3E8FF;color:#4C1D95;}
+.col-item.corretto{border-color:var(--green);background:#DCFCE7;color:var(--green);pointer-events:none;}
+.col-item.sbagliato{border-color:var(--red);background:#FEE2E2;color:var(--red);pointer-events:none;}
+.col-item.locked{pointer-events:none;}
+.badge-num{display:inline-block;background:#9333EA;color:#fff;border-radius:50%;width:20px;height:20px;font-size:11px;font-weight:800;line-height:20px;text-align:center;margin-right:6px;}
+.col-feedback{margin:10px 0 14px;font-size:13px;line-height:1.6;}
+.col-feedback-item{display:flex;align-items:flex-start;gap:8px;padding:7px 10px;border-radius:10px;margin-bottom:6px;font-size:13px;}
+.col-feedback-item.ok{background:#DCFCE7;color:#166534;}
+.col-feedback-item.no{background:#FEE2E2;color:#991B1B;}
+.btn-verifica{background:var(--primary);color:#fff;border:none;border-radius:12px;padding:13px 28px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;display:block;width:100%;margin-top:4px;transition:all .2s;}
+.btn-verifica:hover{background:var(--primary-dark);}
+.btn-verifica:disabled{opacity:.4;pointer-events:none;}
+.btn-avanti-col{background:var(--green);color:#fff;border:none;border-radius:12px;padding:13px 28px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;display:none;width:100%;margin-top:8px;transition:all .2s;}
+.btn-avanti-col:hover{background:#166534;}
+/* QUIZ */
+.progress-wrap{margin-bottom:16px;}
+.progress-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.progress-label{font-size:13px;font-weight:700;color:var(--primary);}
+.progress-score{font-size:13px;font-weight:800;color:var(--primary);}
+.progress-bar-outer{background:#E9D5FF;border-radius:10px;height:10px;}
+.progress-bar-inner{background:var(--primary);border-radius:10px;height:10px;transition:width .4s;}
+.domanda-box{background:var(--card);border-radius:var(--radius);padding:20px;margin-bottom:16px;box-shadow:0 3px 12px rgba(0,0,0,0.07);border-left:5px solid var(--primary);}
+.domanda-categoria{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+.cat-neo{color:var(--neo);}.cat-paleo{color:var(--paleo);}.cat-conf{color:#7C3AED;}
+.domanda-num{font-size:12px;color:#aaa;margin-bottom:6px;}
+.domanda-testo{font-size:16px;font-weight:700;color:#222;line-height:1.5;}
+.opzioni{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.opzione{background:var(--card);border:2.5px solid #DDD6FE;border-radius:14px;padding:14px 16px;cursor:pointer;font-size:14px;font-weight:600;text-align:left;line-height:1.4;transition:all .2s;font-family:inherit;display:flex;align-items:flex-start;gap:10px;}
+.opzione:hover:not(.disabled){background:#EDE9FE;border-color:var(--primary);}
+.opzione-lettera{background:var(--primary);color:#fff;border-radius:8px;min-width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;}
+.opzione.corretta{background:#DCFCE7;border-color:var(--green);color:var(--green);}
+.opzione.corretta .opzione-lettera{background:var(--green);}
+.opzione.sbagliata{background:#FEE2E2;border-color:var(--red);color:var(--red);}
+.opzione.sbagliata .opzione-lettera{background:var(--red);}
+.opzione.disabled{pointer-events:none;opacity:.6;}
+.opzione.corretta,.opzione.sbagliata{opacity:1!important;}
+.feedback{font-size:14px;font-weight:700;min-height:22px;margin-bottom:12px;padding:8px 12px;border-radius:10px;display:none;}
+.feedback.ok{background:#DCFCE7;color:var(--green);display:block;}
+.feedback.no{background:#FEE2E2;color:var(--red);display:block;}
+.feedback.warn{background:#FEF3C7;color:#92400E;display:block;}
+.nav-buttons{display:flex;gap:10px;margin-bottom:8px;}
+.btn-nav{border:none;border-radius:12px;padding:12px 20px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .2s;}
+.btn-back{background:#E9D5FF;color:var(--primary-dark);}
+.btn-back:hover:not(:disabled){background:#DDD6FE;}
+.btn-back:disabled{opacity:.3;pointer-events:none;}
+.btn-next{background:var(--primary);color:#fff;flex:1;}
+.btn-next:hover:not(:disabled){background:var(--primary-dark);}
+.btn-next:disabled{opacity:.4;pointer-events:none;}
+.btn-consegna{background:#15803D;color:#fff;flex:1;}
+/* FINALE */
+.finale{padding:8px 0;}
+.finale-header{background:linear-gradient(135deg,var(--primary),#9333EA);border-radius:20px;padding:24px;text-align:center;color:#fff;margin-bottom:20px;}
+.finale-nome{font-size:16px;opacity:.9;margin-bottom:4px;}
+.finale-header h2{font-size:24px;font-weight:800;}
+.punteggio-grande{background:rgba(255,255,255,0.2);border-radius:16px;padding:16px;margin-top:12px;}
+.punteggio-num{font-size:56px;font-weight:800;line-height:1;}
+.punteggio-su{font-size:16px;opacity:.9;margin-top:4px;}
+.punteggio-pct{font-size:20px;font-weight:800;margin-top:4px;}
+.stelle{font-size:40px;letter-spacing:6px;margin:16px 0 8px;}
+.msg-finale{font-size:15px;color:#555;line-height:1.7;background:var(--primary-light);border-radius:14px;padding:14px 16px;margin-bottom:16px;}
+.riepilogo h3{font-size:14px;font-weight:800;color:#777;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;}
+.riepilogo-sez{font-size:12px;font-weight:800;color:#aaa;text-transform:uppercase;letter-spacing:1px;margin:12px 0 6px;}
+.riepilogo-item{display:flex;align-items:flex-start;gap:8px;font-size:13px;margin-bottom:6px;padding:8px 10px;border-radius:10px;line-height:1.4;}
+.riepilogo-item.ok{background:#DCFCE7;color:#166534;}
+.riepilogo-item.no{background:#FEE2E2;color:#991B1B;}
+.riepilogo-ico{flex-shrink:0;font-size:15px;margin-top:1px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="screen attiva" id="screen-start">
+    <div class="header">
+      <h1>📝 Verifica finale — Storia</h1>
+      <p>Il Neolitico e confronto con il Paleolitico</p>
+      <div class="header-meta"><span>🌾 Classe terza</span><span>2 esercizi</span><span>⏱️ ~18 minuti</span></div>
+    </div>
+    <div class="start-screen">
+      <div class="start-emoji">🏺</div>
+      <h2>Benvenuto/a alla verifica!</h2>
+      <p><strong>Esercizio 1:</strong> Collega 6 termini alle definizioni, poi verifica tutto insieme.<br><strong>Esercizio 2:</strong> 18 domande a scelta multipla.<br>Puoi tornare indietro per rivedere le risposte.</p>
+      <div class="nome-input-wrap">
+        <label for="nome-input">✏️ Scrivi il tuo nome e cognome:</label>
+        <input type="text" id="nome-input" class="nome-input" placeholder="Es. Mario Rossi" oninput="controllaNome()">
+      </div>
+      <div class="avviso">⚠️ Puoi eseguire questa verifica <strong>una sola volta</strong>. Clicca "Inizia" solo quando sei pronto/a!</div>
+      <button class="btn-start" id="btn-start" onclick="inizia()" disabled>Inizia la verifica ▶</button>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-col">
+    <div class="sez-header">
+      <span class="sez-header-ico">🔗</span>
+      <div>
+        <div class="sez-header-txt">Esercizio 1 — Collegamento</div>
+        <div class="sez-header-sub">Abbina tutti i termini, poi clicca "Verifica"</div>
+      </div>
+    </div>
+    <div class="col-istruzioni">👆 Tocca un termine a sinistra → poi tocca la definizione giusta a destra. Quando hai abbinato tutti e 6, clicca <strong>Verifica</strong>.</div>
+    <div class="col-container">
+      <div class="col-col">
+        <h3>Termine</h3>
+        <div class="col-item" id="ct1" onclick="selTerm('ct1','RivNeo')">💥 Rivoluzione neolitica</div>
+        <div class="col-item" id="ct2" onclick="selTerm('ct2','DeaMadre')">🌸 Dea Madre</div>
+        <div class="col-item" id="ct3" onclick="selTerm('ct3','Clan')">👨‍👩‍👧 Clan</div>
+        <div class="col-item" id="ct4" onclick="selTerm('ct4','Domesticare')">🐾 Domesticare</div>
+        <div class="col-item" id="ct5" onclick="selTerm('ct5','Palafitte')">🌊 Palafitte</div>
+        <div class="col-item" id="ct6" onclick="selTerm('ct6','Telaio')">🧵 Telaio</div>
+      </div>
+      <div class="col-col">
+        <h3>Definizione</h3>
+        <div class="col-item" id="cd1" onclick="selDef('cd1','Telaio')">Strumento per tessere lana e fibre vegetali per fare vestiti</div>
+        <div class="col-item" id="cd2" onclick="selDef('cd2','Clan')">Famiglia allargata che comprende genitori, figli e parenti più lontani</div>
+        <div class="col-item" id="cd3" onclick="selDef('cd3','RivNeo')">Insieme dei grandi cambiamenti irreversibili avvenuti nel Neolitico</div>
+        <div class="col-item" id="cd4" onclick="selDef('cd4','Palafitte')">Abitazioni costruite su pali piantati nell'acqua o nel terreno paludoso</div>
+        <div class="col-item" id="cd5" onclick="selDef('cd5','Domesticare')">Addestrare un animale selvatico a vivere accanto all'essere umano</div>
+        <div class="col-item" id="cd6" onclick="selDef('cd6','DeaMadre')">Divinità femminile che rappresentava la fertilità della Terra e dei viventi</div>
+      </div>
+    </div>
+    <div class="col-feedback" id="col-feedback" style="display:none"></div>
+    <button class="btn-verifica" id="btn-verifica-col" onclick="verificaCol()" disabled>✅ Verifica i collegamenti</button>
+    <button class="btn-avanti-col" id="btn-avanti-col" onclick="vaiAQuiz()">Vai all'Esercizio 2 ▶</button>
+  </div>
+
+  <div class="screen" id="screen-quiz">
+    <div class="sez-header">
+      <span class="sez-header-ico">❓</span>
+      <div>
+        <div class="sez-header-txt">Esercizio 2 — Scelta multipla</div>
+        <div class="sez-header-sub">Scegli la risposta giusta tra le quattro opzioni</div>
+      </div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-top">
+        <span class="progress-label" id="prog-label">Domanda 1 di 18</span>
+        <span class="progress-score">⭐ <span id="score-live">0</span> / 18</span>
+      </div>
+      <div class="progress-bar-outer"><div class="progress-bar-inner" id="prog-bar" style="width:0%"></div></div>
+    </div>
+    <div class="domanda-box">
+      <div class="domanda-categoria" id="dom-cat"></div>
+      <div class="domanda-num" id="dom-num"></div>
+      <div class="domanda-testo" id="dom-testo"></div>
+    </div>
+    <div class="opzioni" id="opzioni-wrap"></div>
+    <div class="feedback" id="feedback"></div>
+    <div class="nav-buttons">
+      <button class="btn-nav btn-back" id="btn-back" onclick="vaiIndietro()" disabled>◀ Indietro</button>
+      <button class="btn-nav btn-next" id="btn-next" onclick="vaiAvanti()" disabled>Avanti ▶</button>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-fine">
+    <div class="finale">
+      <div class="finale-header">
+        <div class="finale-nome" id="finale-nome"></div>
+        <h2>Verifica consegnata! 🎉</h2>
+        <div class="punteggio-grande">
+          <div class="punteggio-num" id="score-finale"></div>
+          <div class="punteggio-su" id="score-su"></div>
+          <div class="punteggio-pct" id="score-pct"></div>
+        </div>
+      </div>
+      <div class="stelle" id="stelle"></div>
+      <div class="msg-finale" id="msg-finale"></div>
+      <div class="riepilogo">
+        <h3>📋 Riepilogo completo</h3>
+        <div class="riepilogo-sez">🔗 Esercizio 1 — Collegamento</div>
+        <div id="riepilogo-col"></div>
+        <div class="riepilogo-sez">❓ Esercizio 2 — Scelta multipla</div>
+        <div id="riepilogo-quiz"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== COLLEGAMENTO =====
+const coppieCorrette={
+  'RivNeo':'cd3','DeaMadre':'cd6','Clan':'cd2',
+  'Domesticare':'cd5','Palafitte':'cd4','Telaio':'cd1'
+};
+const defLabel={
+  'RivNeo':'Insieme dei grandi cambiamenti irreversibili avvenuti nel Neolitico',
+  'DeaMadre':'Divinità femminile che rappresentava la fertilità della Terra',
+  'Clan':'Famiglia allargata con genitori, figli e parenti lontani',
+  'Domesticare':'Addestrare un animale selvatico a vivere con l\'uomo',
+  'Palafitte':'Abitazioni su pali nell\'acqua o nel terreno paludoso',
+  'Telaio':'Strumento per tessere lana e fibre vegetali'
+};
+const termLabel={'RivNeo':'Rivoluzione neolitica','DeaMadre':'Dea Madre','Clan':'Clan','Domesticare':'Domesticare','Palafitte':'Palafitte','Telaio':'Telaio'};
+
+let selT=null, selD=null;
+// abbinamenti = {termKey: defId}
+let abbinamenti={};
+let colCorretti={};
+let colVerificato=false;
+
+function aggiornaBtnVerifica(){
+  document.getElementById('btn-verifica-col').disabled=(Object.keys(abbinamenti).length<6);
+}
+
+function selTerm(id,key){
+  if(colVerificato)return;
+  // deseleziona tutto
+  document.querySelectorAll('#screen-col .col-item').forEach(el=>{
+    if(!el.classList.contains('corretto')&&!el.classList.contains('sbagliato'))
+      el.classList.remove('selected');
+  });
+  selT={id,key};
+  document.getElementById(id).classList.add('selected');
+  if(selD)abbina();
+}
+function selDef(id,key){
+  if(colVerificato)return;
+  document.querySelectorAll('#screen-col .col-item').forEach(el=>{
+    if(!el.classList.contains('corretto')&&!el.classList.contains('sbagliato'))
+      el.classList.remove('selected');
+  });
+  selD={id,key};
+  document.getElementById(id).classList.add('selected');
+  if(selT)abbina();
+}
+
+function abbina(){
+  const t=selT, d=selD;
+  selT=null; selD=null;
+  // rimuovi classe selected
+  document.getElementById(t.id).classList.remove('selected');
+  document.getElementById(d.id).classList.remove('selected');
+  // rimuovi eventuali abbinamenti precedenti con questi elementi
+  Object.keys(abbinamenti).forEach(k=>{
+    if(k===t.key||abbinamenti[k]===d.id){
+      const oldTId='ct'+(Object.keys(coppieCorrette).indexOf(k)+1);
+      const oldDId=abbinamenti[k];
+      // trova l'elemento termine per chiave
+      document.querySelectorAll('#screen-col .col-item').forEach(el=>{
+        el.classList.remove('abbinato');
+      });
+      delete abbinamenti[k];
+    }
+  });
+  // salva abbinamento
+  abbinamenti[t.key]=d.id;
+  // aggiorna visualizzazione tutti gli abbinati
+  aggiornaVisuale();
+  aggiornaBtnVerifica();
+}
+
+function aggiornaVisuale(){
+  // reset classi abbinato su tutti (non corretto/sbagliato)
+  document.querySelectorAll('#screen-col .col-item').forEach(el=>{
+    if(!el.classList.contains('corretto')&&!el.classList.contains('sbagliato'))
+      el.classList.remove('abbinato','selected');
+  });
+  let num=1;
+  Object.entries(abbinamenti).forEach(([tKey,dId])=>{
+    // trova id termine
+    const tIdx=Object.keys(coppieCorrette).indexOf(tKey);
+    const tId='ct'+(tIdx+1);
+    const tEl=document.getElementById(tId);
+    const dEl=document.getElementById(dId);
+    if(tEl&&dEl){
+      tEl.classList.add('abbinato');
+      dEl.classList.add('abbinato');
+      // mostra numero abbinamento
+      const badgeT=tEl.querySelector('.badge-num');
+      const badgeD=dEl.querySelector('.badge-num');
+      if(!badgeT){
+        const b=document.createElement('span');b.className='badge-num';b.textContent=num;
+        tEl.prepend(b);
+      } else badgeT.textContent=num;
+      if(!badgeD){
+        const b=document.createElement('span');b.className='badge-num';b.textContent=num;
+        dEl.prepend(b);
+      } else badgeD.textContent=num;
+      num++;
+    }
+  });
+}
+
+function verificaCol(){
+  if(Object.keys(abbinamenti).length<6)return;
+  colVerificato=true;
+  let corretti=0;
+  const fbDiv=document.getElementById('col-feedback');
+  fbDiv.innerHTML='';
+  fbDiv.style.display='block';
+  Object.keys(coppieCorrette).forEach(tKey=>{
+    const tIdx=Object.keys(coppieCorrette).indexOf(tKey);
+    const tId='ct'+(tIdx+1);
+    const tEl=document.getElementById(tId);
+    const dId=abbinamenti[tKey];
+    const dEl=document.getElementById(dId);
+    const giusto=(coppieCorrette[tKey]===dId);
+    colCorretti[tKey]=giusto;
+    if(giusto){
+      corretti++;
+      tEl.classList.remove('abbinato');dEl.classList.remove('abbinato');
+      tEl.classList.add('corretto','locked');dEl.classList.add('corretto','locked');
+    } else {
+      tEl.classList.remove('abbinato');dEl.classList.remove('abbinato');
+      tEl.classList.add('sbagliato','locked');dEl.classList.add('sbagliato','locked');
+    }
+    const item=document.createElement('div');
+    item.className='col-feedback-item '+(giusto?'ok':'no');
+    item.innerHTML=`<span>${giusto?'✅':'❌'}</span><span><strong>${termLabel[tKey]}</strong>${giusto?'':' → <em>'+defLabel[tKey]+'</em>'}</span>`;
+    fbDiv.appendChild(item);
+  });
+  document.getElementById('btn-verifica-col').style.display='none';
+  document.getElementById('btn-avanti-col').style.display='block';
+  document.getElementById('btn-avanti-col').textContent='Vai all\'Esercizio 2 ▶ ('+corretti+'/6 corretti)';
+}
+
+function vaiAQuiz(){
+  document.getElementById('screen-col').classList.remove('attiva');
+  document.getElementById('screen-quiz').classList.add('attiva');
+  mostraDomanda();
+}
+
+// ===== QUIZ =====
+const domande=[
+  {cat:'neo',catLabel:'🌾 Neolitico',testo:'Quando inizia il Neolitico?',opts:['3,3 milioni di anni fa','10.000 anni fa','250.000 anni fa','40.000 anni fa'],c:1},
+  {cat:'neo',catLabel:'🌾 Neolitico',testo:'Cosa vuol dire "rivoluzione neolitica"?',opts:['Una grande guerra tra tribù','Grandi cambiamenti irreversibili nella vita umana','La scoperta del fuoco','La comparsa dei Sapiens'],c:1},
+  {cat:'neo',catLabel:'🌾 Neolitico',testo:'Cosa si coltivava nel Neolitico?',opts:['Patate e pomodori','Grano, orzo, riso e mais','Solo frutta selvatica','Fiori e piante ornamentali'],c:1},
+  {cat:'neo',catLabel:'🌾 Neolitico',testo:'Come si chiama il villaggio neolitico scoperto in Turchia?',opts:['Olduvai','Rift Valley','Çatal Hüyük','Mezzaluna fertile'],c:2},
+  {cat:'neo',catLabel:'🌾 Neolitico',testo:'Come si entrava nelle case di Çatal Hüyük?',opts:['Da una porta sul davanti','Da una finestra laterale','Dal tetto','Da un tunnel sotterraneo'],c:2},
+  {cat:'neo',catLabel:'🌾 Neolitico',testo:'A cosa serviva l\'aratro nel Neolitico?',opts:['Tagliare i cereali','Pescare nei fiumi','Solcare il terreno per seminare','Tessere la lana'],c:2},
+  {cat:'neo',catLabel:'🌾 Neolitico',testo:'Come si chiama la tecnica per fare i vasi di argilla?',opts:['A spirale','A colombino','A strati','A stampo'],c:1},
+  {cat:'neo',catLabel:'🌾 Neolitico',testo:'Perché nel Neolitico i villaggi nascevano vicino ai fiumi?',opts:['Per pescare più facilmente','Perché l\'acqua serviva per bere, coltivare e allevare','Per difendersi dai nemici','Perché il terreno era più morbido'],c:1},
+  {cat:'neo',catLabel:'🌾 Neolitico',testo:'Cosa sono le palafitte?',opts:['Grotte scavate nella roccia','Capanne costruite su pali nell\'acqua o vicino ai fiumi','Templi dedicati alla Dea Madre','Recinti per gli animali'],c:1},
+  {cat:'neo',catLabel:'🌾 Neolitico',testo:'Quale fu il primo animale addomesticato dall\'uomo?',opts:['Il gatto','Il cavallo','La pecora','Il lupo'],c:3},
+  {cat:'neo',catLabel:'🌾 Neolitico',testo:'Nel Neolitico perché nacquero i mestieri specializzati?',opts:['Per noia','Perché la società era più grande e complessa e servivano competenze diverse','Perché gli anziani lo decisero','Perché le donne non lavoravano più'],c:1},
+  {cat:'conf',catLabel:'⚖️ Confronto',testo:'Nel Paleolitico si era nomadi. Nel Neolitico invece si era:',opts:['Ancora più nomadi','Stanziali — si restava in un posto fisso','Sempre in viaggio','Solitari'],c:1},
+  {cat:'conf',catLabel:'⚖️ Confronto',testo:'Nel Paleolitico la pietra era scheggiata. Nel Neolitico era:',opts:['Più grande e pesante','Levigata e strofinata con la sabbia','Colorata con pigmenti','Non veniva più usata'],c:1},
+  {cat:'conf',catLabel:'⚖️ Confronto',testo:'Nel Paleolitico si cacciava e raccoglieva. Nel Neolitico invece:',opts:['Si cacciava di più','Si coltivava e si allevava','Si mangiava solo pesce','Si digiunava spesso'],c:1},
+  {cat:'conf',catLabel:'⚖️ Confronto',testo:'Qual è la grande differenza tra le abitazioni del Paleolitico e del Neolitico?',opts:['Nel Paleolitico si viveva in villaggi stabili','Nel Neolitico si viveva in grotte','Nel Paleolitico si viveva in grotte, nel Neolitico in capanne e villaggi','Non c\'è nessuna differenza'],c:2},
+  {cat:'paleo',catLabel:'🪨 Paleolitico',testo:'Cosa significa la parola "Paleolitico"?',opts:['Età della pietra levigata','Età della pietra scheggiata','Età del fuoco','Età della caccia'],c:1},
+  {cat:'paleo',catLabel:'🪨 Paleolitico',testo:'Quale specie scoprì e usò il fuoco per prima?',opts:['Homo habilis','Australopiteco','Homo erectus','Homo sapiens'],c:2},
+  {cat:'paleo',catLabel:'🪨 Paleolitico',testo:'Come si chiama il primo strumento di pietra scheggiata della storia?',opts:['Raschiatoio','Denticolato','Chopper','Propulsore'],c:2},
+];
+let idx=0,risposte=Array(domande.length).fill(null),consegnato=false,nomeAlunno='';
+
+function controllaNome(){document.getElementById('btn-start').disabled=(document.getElementById('nome-input').value.trim().length<2);}
+function inizia(){
+  nomeAlunno=document.getElementById('nome-input').value.trim();
+  document.getElementById('screen-start').classList.remove('attiva');
+  document.getElementById('screen-col').classList.add('attiva');
+}
+function mostraDomanda(){
+  const d=domande[idx];
+  document.getElementById('dom-cat').className='domanda-categoria cat-'+d.cat;
+  document.getElementById('dom-cat').textContent=d.catLabel;
+  document.getElementById('dom-num').textContent='Domanda '+(idx+1)+' di '+domande.length;
+  document.getElementById('dom-testo').textContent=d.testo;
+  document.getElementById('prog-label').textContent='Domanda '+(idx+1)+' di '+domande.length;
+  document.getElementById('prog-bar').style.width=((idx+1)/domande.length*100)+'%';
+  const wrap=document.getElementById('opzioni-wrap');wrap.innerHTML='';
+  ['A','B','C','D'].forEach((l,i)=>{
+    const btn=document.createElement('button');
+    btn.className='opzione'+(risposte[idx]!==null?' disabled':'');
+    btn.innerHTML=`<span class="opzione-lettera">${l}</span><span>${d.opts[i]}</span>`;
+    if(risposte[idx]===i)btn.classList.add(i===d.c?'corretta':'sbagliata');
+    else if(risposte[idx]!==null&&i===d.c)btn.classList.add('corretta');
+    btn.onclick=()=>rispondi(i);wrap.appendChild(btn);
+  });
+  const fb=document.getElementById('feedback');
+  if(risposte[idx]!==null){fb.className='feedback '+(risposte[idx]===d.c?'ok':'no');fb.textContent=risposte[idx]===d.c?'✅ Esatto!':'❌ Non corretto — la risposta giusta è evidenziata in verde.';}
+  else{fb.className='feedback';fb.textContent='';}
+  document.getElementById('btn-back').disabled=(idx===0);
+  aggiornaBottoneAvanti();
+  document.getElementById('score-live').textContent=calcolaScore();
+}
+function rispondi(i){if(risposte[idx]!==null)return;risposte[idx]=i;mostraDomanda();}
+function aggiornaBottoneAvanti(){
+  const b=document.getElementById('btn-next');
+  if(idx===domande.length-1){b.textContent='Consegna ✅';b.className='btn-nav btn-consegna';b.onclick=consegna;}
+  else{b.textContent='Avanti ▶';b.className='btn-nav btn-next';b.onclick=vaiAvanti;}
+  b.disabled=(risposte[idx]===null);
+}
+function vaiAvanti(){if(idx<domande.length-1){idx++;mostraDomanda();}}
+function vaiIndietro(){if(idx>0){idx--;mostraDomanda();}}
+function calcolaScore(){let s=0;domande.forEach((d,i)=>{if(risposte[i]===d.c)s++;});return s;}
+function consegna(){
+  if(consegnato)return;
+  const n=risposte.filter(r=>r===null).length;
+  if(n>0){const fb=document.getElementById('feedback');fb.className='feedback warn';fb.textContent='⚠️ Hai ancora '+n+' domande senza risposta. Torna indietro per completarle tutte.';return;}
+  consegnato=true;mostraFinale();
+}
+function mostraFinale(){
+  document.getElementById('screen-quiz').classList.remove('attiva');document.getElementById('screen-fine').classList.add('attiva');
+  const qs=calcolaScore(),qt=domande.length;
+  const cs=Object.values(colCorretti).filter(v=>v).length,ct=6;
+  const tot=qs+cs,totMax=qt+ct,p=Math.round(tot/totMax*100);
+  document.getElementById('finale-nome').textContent='👤 '+nomeAlunno;
+  document.getElementById('score-finale').textContent=tot;
+  document.getElementById('score-su').textContent='punti totali su '+totMax+' (collegamento: '+cs+'/'+ct+' • quiz: '+qs+'/'+qt+')';
+  document.getElementById('score-pct').textContent=p+'% di risposte esatte';
+  let st='',msg='';
+  if(p>=90){st='⭐⭐⭐';msg='Eccellente! Dimostri una conoscenza sicura e completa degli argomenti. Ottimo lavoro!';}
+  else if(p>=75){st='⭐⭐';msg='Molto bene! Conosci bene gli argomenti. Rileggi le parti dove hai sbagliato per consolidare.';}
+  else if(p>=55){st='⭐';msg='Hai dimostrato una conoscenza di base. Rileggi le mappe per rafforzare i concetti.';}
+  else{st='📖';msg='Hai bisogno di ripasso. Rileggi con calma le mappe del Paleolitico e del Neolitico.';}
+  document.getElementById('stelle').textContent=st;document.getElementById('msg-finale').textContent=msg;
+  const rc=document.getElementById('riepilogo-col');rc.innerHTML='';
+  Object.keys(coppieCorrette).forEach(k=>{
+    const ok=colCorretti[k]===true;const div=document.createElement('div');
+    div.className='riepilogo-item '+(ok?'ok':'no');
+    div.innerHTML=`<span class="riepilogo-ico">${ok?'✅':'❌'}</span><span><strong>${termLabel[k]}</strong>${ok?'':' → <em>'+defLabel[k]+'</em>'}</span>`;
+    rc.appendChild(div);
+  });
+  const rq=document.getElementById('riepilogo-quiz');rq.innerHTML='';
+  domande.forEach((d,i)=>{
+    const ok=risposte[i]===d.c;const div=document.createElement('div');
+    div.className='riepilogo-item '+(ok?'ok':'no');
+    div.innerHTML=`<span class="riepilogo-ico">${ok?'✅':'❌'}</span><span><strong>${i+1}.</strong> ${d.testo}${ok?'':' → <em>'+d.opts[d.c]+'</em>'}</span>`;
+    rq.appendChild(div);
+  });
+}
+</script>
+</body>
+</html>
