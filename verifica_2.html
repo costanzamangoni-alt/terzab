@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verifica — Storia (DSA)</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--primary:#1565C0;--primary-light:#E3F2FD;--primary-dark:#0D47A1;--neo:#2E8B2E;--paleo:#C85A10;--green:#15803D;--red:#DC2626;--bg:#F0F7FF;--card:#fff;--radius:16px;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:var(--bg);padding:16px;}
+.wrap{max-width:680px;margin:0 auto;}
+.header{background:linear-gradient(135deg,var(--primary),#1E88E5);border-radius:20px;padding:20px 24px;margin-bottom:20px;color:#fff;}
+.header h1{font-size:22px;font-weight:800;margin-bottom:4px;}
+.header p{font-size:13px;opacity:.88;}
+.header-meta{display:flex;gap:16px;margin-top:10px;font-size:12px;opacity:.85;flex-wrap:wrap;}
+.header-meta span{background:rgba(255,255,255,0.2);border-radius:8px;padding:3px 10px;font-weight:700;}
+.screen{display:none;}.screen.attiva{display:block;}
+.start-screen{text-align:center;padding:10px 0;}
+.start-emoji{font-size:56px;margin-bottom:12px;}
+.start-screen h2{font-size:22px;font-weight:800;color:var(--primary-dark);margin-bottom:8px;}
+.start-screen p{font-size:15px;color:#555;line-height:1.7;margin-bottom:6px;}
+.nome-input-wrap{margin:20px 0 10px;}
+.nome-input-wrap label{display:block;font-size:15px;font-weight:700;color:var(--primary-dark);margin-bottom:8px;}
+.nome-input{width:100%;padding:14px 16px;border:2.5px solid #BBDEFB;border-radius:14px;font-size:17px;font-family:inherit;font-weight:700;color:#333;outline:none;}
+.nome-input:focus{border-color:var(--primary);}
+.avviso{background:#FEF3C7;border:2px solid #F59E0B;border-radius:12px;padding:14px 16px;font-size:14px;color:#92400E;font-weight:700;margin:16px 0;line-height:1.6;text-align:left;}
+.btn-start{background:var(--primary);color:#fff;border:none;border-radius:14px;padding:16px 40px;font-size:18px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:8px;transition:all .2s;width:100%;}
+.btn-start:hover{background:var(--primary-dark);}
+.btn-start:disabled{opacity:.4;pointer-events:none;}
+.sez-header{background:var(--primary-light);border-radius:14px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;}
+.sez-header-ico{font-size:22px;}
+.sez-header-txt{font-size:15px;font-weight:800;color:var(--primary-dark);}
+.sez-header-sub{font-size:12px;color:#1565C0;margin-top:2px;}
+.col-istruzioni{background:#fff;border:2px solid #BBDEFB;border-radius:12px;padding:12px 16px;font-size:14px;color:#555;margin-bottom:14px;line-height:1.5;}
+.col-container{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;}
+.col-col h3{font-size:12px;font-weight:800;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;text-align:center;}
+.col-item{background:var(--card);border:2.5px solid #BBDEFB;border-radius:var(--radius);padding:12px 14px;margin-bottom:8px;cursor:pointer;font-size:14px;font-weight:700;text-align:center;line-height:1.5;transition:all .2s;user-select:none;}
+.col-item:hover:not(.locked){border-color:var(--primary);background:var(--primary-light);}
+.col-item.selected{border-color:var(--primary);background:var(--primary-light);box-shadow:0 0 0 3px rgba(21,101,192,0.2);}
+.col-item.abbinato{border-color:#1E88E5;background:#E3F2FD;color:#0D47A1;}
+.col-item.corretto{border-color:var(--green);background:#DCFCE7;color:var(--green);pointer-events:none;}
+.col-item.sbagliato{border-color:var(--red);background:#FEE2E2;color:var(--red);pointer-events:none;}
+.col-item.locked{pointer-events:none;}
+.badge-num{display:inline-block;background:#1E88E5;color:#fff;border-radius:50%;width:20px;height:20px;font-size:11px;font-weight:800;line-height:20px;text-align:center;margin-right:6px;}
+.col-feedback{margin:10px 0 14px;font-size:14px;line-height:1.6;}
+.col-feedback-item{display:flex;align-items:flex-start;gap:8px;padding:9px 12px;border-radius:10px;margin-bottom:6px;font-size:14px;}
+.col-feedback-item.ok{background:#DCFCE7;color:#166534;}
+.col-feedback-item.no{background:#FEE2E2;color:#991B1B;}
+.btn-verifica{background:var(--primary);color:#fff;border:none;border-radius:12px;padding:14px 28px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;display:block;width:100%;margin-top:4px;transition:all .2s;}
+.btn-verifica:hover{background:var(--primary-dark);}
+.btn-verifica:disabled{opacity:.4;pointer-events:none;}
+.btn-avanti-col{background:var(--green);color:#fff;border:none;border-radius:12px;padding:14px 28px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;display:none;width:100%;margin-top:8px;transition:all .2s;}
+.btn-avanti-col:hover{background:#166534;}
+.progress-wrap{margin-bottom:16px;}
+.progress-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.progress-label{font-size:14px;font-weight:700;color:var(--primary);}
+.progress-score{font-size:14px;font-weight:800;color:var(--primary);}
+.progress-bar-outer{background:#BBDEFB;border-radius:10px;height:12px;}
+.progress-bar-inner{background:var(--primary);border-radius:10px;height:12px;transition:width .4s;}
+.domanda-box{background:var(--card);border-radius:var(--radius);padding:22px;margin-bottom:16px;box-shadow:0 3px 12px rgba(0,0,0,0.07);border-left:5px solid var(--primary);}
+.domanda-categoria{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+.cat-neo{color:var(--neo);}.cat-paleo{color:var(--paleo);}.cat-conf{color:#1565C0;}
+.domanda-num{font-size:13px;color:#aaa;margin-bottom:8px;}
+.domanda-testo{font-size:19px;font-weight:700;color:#222;line-height:1.65;}
+.opzioni{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+.opzione{background:var(--card);border:2.5px solid #BBDEFB;border-radius:14px;padding:16px;cursor:pointer;font-size:15px;font-weight:700;text-align:left;line-height:1.5;transition:all .2s;font-family:inherit;display:flex;align-items:flex-start;gap:10px;}
+.opzione:hover:not(.disabled){background:#E3F2FD;border-color:var(--primary);}
+.opzione-lettera{background:var(--primary);color:#fff;border-radius:8px;min-width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0;}
+.opzione.corretta{background:#DCFCE7;border-color:var(--green);color:var(--green);}
+.opzione.corretta .opzione-lettera{background:var(--green);}
+.opzione.sbagliata{background:#FEE2E2;border-color:var(--red);color:var(--red);}
+.opzione.sbagliata .opzione-lettera{background:var(--red);}
+.opzione.disabled{pointer-events:none;opacity:.6;}
+.opzione.corretta,.opzione.sbagliata{opacity:1!important;}
+.feedback{font-size:14px;font-weight:700;min-height:22px;margin-bottom:12px;padding:10px 14px;border-radius:10px;display:none;line-height:1.5;}
+.feedback.ok{background:#DCFCE7;color:var(--green);display:block;}
+.feedback.no{background:#FEE2E2;color:var(--red);display:block;}
+.feedback.warn{background:#FEF3C7;color:#92400E;display:block;}
+.nav-buttons{display:flex;gap:10px;margin-bottom:8px;}
+.btn-nav{border:none;border-radius:12px;padding:13px 20px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .2s;}
+.btn-back{background:#BBDEFB;color:var(--primary-dark);}
+.btn-back:hover:not(:disabled){background:#90CAF9;}
+.btn-back:disabled{opacity:.3;pointer-events:none;}
+.btn-next{background:var(--primary);color:#fff;flex:1;}
+.btn-next:hover:not(:disabled){background:var(--primary-dark);}
+.btn-next:disabled{opacity:.4;pointer-events:none;}
+.btn-consegna{background:#15803D;color:#fff;flex:1;}
+.finale{padding:8px 0;}
+.finale-header{background:linear-gradient(135deg,var(--primary),#1E88E5);border-radius:20px;padding:24px;text-align:center;color:#fff;margin-bottom:20px;}
+.finale-nome{font-size:16px;opacity:.9;margin-bottom:4px;}
+.finale-header h2{font-size:24px;font-weight:800;}
+.punteggio-grande{background:rgba(255,255,255,0.2);border-radius:16px;padding:16px;margin-top:12px;}
+.punteggio-num{font-size:56px;font-weight:800;line-height:1;}
+.punteggio-su{font-size:16px;opacity:.9;margin-top:4px;}
+.punteggio-pct{font-size:20px;font-weight:800;margin-top:4px;}
+.stelle{font-size:40px;letter-spacing:6px;margin:16px 0 8px;}
+.msg-finale{font-size:15px;color:#555;line-height:1.7;background:var(--primary-light);border-radius:14px;padding:14px 16px;margin-bottom:16px;}
+.riepilogo h3{font-size:14px;font-weight:800;color:#777;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;}
+.riepilogo-sez{font-size:12px;font-weight:800;color:#aaa;text-transform:uppercase;letter-spacing:1px;margin:12px 0 6px;}
+.riepilogo-item{display:flex;align-items:flex-start;gap:8px;font-size:14px;margin-bottom:6px;padding:10px 12px;border-radius:10px;line-height:1.5;}
+.riepilogo-item.ok{background:#DCFCE7;color:#166534;}
+.riepilogo-item.no{background:#FEE2E2;color:#991B1B;}
+.riepilogo-ico{flex-shrink:0;font-size:16px;margin-top:1px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="screen attiva" id="screen-start">
+    <div class="header">
+      <h1>📝 Verifica — Storia</h1>
+      <p>Il Neolitico e il Paleolitico</p>
+      <div class="header-meta"><span>🌾 Classe terza</span><span>2 esercizi</span><span>⏱️ ~15 minuti</span></div>
+    </div>
+    <div class="start-screen">
+      <div class="start-emoji">🏺</div>
+      <h2>Ciao! Sei pronto/a?</h2>
+      <p><strong>Esercizio 1:</strong> Collega 6 parole alle definizioni, poi clicca Verifica.<br><strong>Esercizio 2:</strong> Rispondi a 13 domande.<br>Puoi tornare indietro se vuoi cambiare una risposta.</p>
+      <div class="nome-input-wrap">
+        <label for="nome-input">✏️ Scrivi il tuo nome:</label>
+        <input type="text" id="nome-input" class="nome-input" placeholder="Es. Mario Rossi" oninput="controllaNome()">
+      </div>
+      <div class="avviso">⚠️ Puoi fare questa verifica <strong>una sola volta</strong>. Clicca "Inizia" solo quando sei pronto/a!</div>
+      <button class="btn-start" id="btn-start" onclick="inizia()" disabled>Inizia ▶</button>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-col">
+    <div class="sez-header">
+      <span class="sez-header-ico">🔗</span>
+      <div>
+        <div class="sez-header-txt">Esercizio 1 — Collegamento</div>
+        <div class="sez-header-sub">Abbina tutte le parole, poi clicca "Verifica"</div>
+      </div>
+    </div>
+    <div class="col-istruzioni">👆 Tocca una parola a sinistra → poi tocca la definizione giusta a destra. Quando hai abbinato tutte e 6, clicca <strong>Verifica</strong>.</div>
+    <div class="col-container">
+      <div class="col-col">
+        <h3>Parola</h3>
+        <div class="col-item" id="ct1" onclick="selTerm('ct1','Fossato')">🏰 Fossato</div>
+        <div class="col-item" id="ct2" onclick="selTerm('ct2','Aratro')">🔨 Aratro</div>
+        <div class="col-item" id="ct3" onclick="selTerm('ct3','Ceramica')">🏺 Ceramica</div>
+        <div class="col-item" id="ct4" onclick="selTerm('ct4','Villaggio')">🏘️ Villaggio</div>
+        <div class="col-item" id="ct5" onclick="selTerm('ct5','DeaMadre')">🌸 Dea Madre</div>
+        <div class="col-item" id="ct6" onclick="selTerm('ct6','Allevamento')">🐄 Allevamento</div>
+      </div>
+      <div class="col-col">
+        <h3>Definizione</h3>
+        <div class="col-item" id="cd1" onclick="selDef('cd1','Ceramica')">Vasi di argilla per conservare e cuocere il cibo</div>
+        <div class="col-item" id="cd2" onclick="selDef('cd2','Villaggio')">Insieme di case costruite vicine dove vivono più famiglie</div>
+        <div class="col-item" id="cd3" onclick="selDef('cd3','Fossato')">Canale intorno al villaggio per proteggerlo e raccogliere acqua</div>
+        <div class="col-item" id="cd4" onclick="selDef('cd4','Allevamento')">Prendersi cura degli animali per avere carne, latte e lana</div>
+        <div class="col-item" id="cd5" onclick="selDef('cd5','Aratro')">Strumento che solca il terreno per poter seminare</div>
+        <div class="col-item" id="cd6" onclick="selDef('cd6','DeaMadre')">Divinità che rappresentava la fertilità della Terra</div>
+      </div>
+    </div>
+    <div class="col-feedback" id="col-feedback" style="display:none"></div>
+    <button class="btn-verifica" id="btn-verifica-col" onclick="verificaCol()" disabled>✅ Verifica i collegamenti</button>
+    <button class="btn-avanti-col" id="btn-avanti-col" onclick="vaiAQuiz()">Vai all'Esercizio 2 ▶</button>
+  </div>
+
+  <div class="screen" id="screen-quiz">
+    <div class="sez-header">
+      <span class="sez-header-ico">❓</span>
+      <div>
+        <div class="sez-header-txt">Esercizio 2 — Scelta multipla</div>
+        <div class="sez-header-sub">Scegli la risposta giusta</div>
+      </div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-top">
+        <span class="progress-label" id="prog-label">Domanda 1 di 13</span>
+        <span class="progress-score">⭐ <span id="score-live">0</span> / 13</span>
+      </div>
+      <div class="progress-bar-outer"><div class="progress-bar-inner" id="prog-bar" style="width:0%"></div></div>
+    </div>
+    <div class="domanda-box">
+      <div class="domanda-categoria" id="dom-cat"></div>
+      <div class="domanda-num" id="dom-num"></div>
+      <div class="domanda-testo" id="dom-testo"></div>
+    </div>
+    <div class="opzioni" id="opzioni-wrap"></div>
+    <div class="feedback" id="feedback"></div>
+    <div class="nav-buttons">
+      <button class="btn-nav btn-back" id="btn-back" onclick="vaiIndietro()" disabled>◀ Indietro</button>
+      <button class="btn-nav btn-next" id="btn-next" onclick="vaiAvanti()" disabled>Avanti ▶</button>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-fine">
+    <div class="finale">
+      <div class="finale-header">
+        <div class="finale-nome" id="finale-nome"></div>
+        <h2>Hai finito! 🎉</h2>
+        <div class="punteggio-grande">
+          <div class="punteggio-num" id="score-finale"></div>
+          <div class="punteggio-su" id="score-su"></div>
+          <div class="punteggio-pct" id="score-pct"></div>
+        </div>
+      </div>
+      <div class="stelle" id="stelle"></div>
+      <div class="msg-finale" id="msg-finale"></div>
+      <div class="riepilogo">
+        <h3>📋 Le tue risposte</h3>
+        <div class="riepilogo-sez">🔗 Esercizio 1 — Collegamento</div>
+        <div id="riepilogo-col"></div>
+        <div class="riepilogo-sez">❓ Esercizio 2 — Domande</div>
+        <div id="riepilogo-quiz"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const coppieD={'Fossato':'cd3','Aratro':'cd5','Ceramica':'cd1','Villaggio':'cd2','DeaMadre':'cd6','Allevamento':'cd4'};
+const defLabelD={'Fossato':'Canale intorno al villaggio per proteggerlo','Aratro':'Solca il terreno per seminare','Ceramica':'Vasi di argilla per conservare il cibo','Villaggio':'Insieme di case dove vivono più famiglie','DeaMadre':'Divinità della fertilità della Terra','Allevamento':'Prendersi cura degli animali domestici'};
+const termLabelD={'Fossato':'Fossato','Aratro':'Aratro','Ceramica':'Ceramica','Villaggio':'Villaggio','DeaMadre':'Dea Madre','Allevamento':'Allevamento'};
+
+let selT=null,selD=null,abbinamenti={},colCorretti={},colVerificato=false;
+
+function aggiornaBtnVerifica(){document.getElementById('btn-verifica-col').disabled=(Object.keys(abbinamenti).length<6);}
+function selTerm(id,key){
+  if(colVerificato)return;
+  document.querySelectorAll('#screen-col .col-item').forEach(el=>{if(!el.classList.contains('corretto')&&!el.classList.contains('sbagliato'))el.classList.remove('selected');});
+  selT={id,key};document.getElementById(id).classList.add('selected');if(selD)abbina();
+}
+function selDef(id,key){
+  if(colVerificato)return;
+  document.querySelectorAll('#screen-col .col-item').forEach(el=>{if(!el.classList.contains('corretto')&&!el.classList.contains('sbagliato'))el.classList.remove('selected');});
+  selD={id,key};document.getElementById(id).classList.add('selected');if(selT)abbina();
+}
+function abbina(){
+  const t=selT,d=selD;selT=null;selD=null;
+  document.getElementById(t.id).classList.remove('selected');document.getElementById(d.id).classList.remove('selected');
+  Object.keys(abbinamenti).forEach(k=>{if(k===t.key||abbinamenti[k]===d.id)delete abbinamenti[k];});
+  abbinamenti[t.key]=d.id;
+  aggiornaVisuale();aggiornaBtnVerifica();
+}
+function aggiornaVisuale(){
+  document.querySelectorAll('#screen-col .col-item').forEach(el=>{if(!el.classList.contains('corretto')&&!el.classList.contains('sbagliato')){el.classList.remove('abbinato','selected');const b=el.querySelector('.badge-num');if(b)b.remove();}});
+  let num=1;
+  Object.entries(abbinamenti).forEach(([tKey,dId])=>{
+    const tIdx=Object.keys(coppieD).indexOf(tKey);
+    const tId='ct'+(tIdx+1);
+    const tEl=document.getElementById(tId);const dEl=document.getElementById(dId);
+    if(tEl&&dEl){
+      tEl.classList.add('abbinato');dEl.classList.add('abbinato');
+      const bt=document.createElement('span');bt.className='badge-num';bt.textContent=num;tEl.prepend(bt);
+      const bd=document.createElement('span');bd.className='badge-num';bd.textContent=num;dEl.prepend(bd);
+      num++;
+    }
+  });
+}
+function verificaCol(){
+  if(Object.keys(abbinamenti).length<6)return;
+  colVerificato=true;
+  const fbDiv=document.getElementById('col-feedback');fbDiv.innerHTML='';fbDiv.style.display='block';
+  let corretti=0;
+  Object.keys(coppieD).forEach(tKey=>{
+    const tIdx=Object.keys(coppieD).indexOf(tKey);
+    const tEl=document.getElementById('ct'+(tIdx+1));
+    const dId=abbinamenti[tKey];const dEl=document.getElementById(dId);
+    const giusto=(coppieD[tKey]===dId);
+    colCorretti[tKey]=giusto;
+    if(giusto){corretti++;tEl.classList.remove('abbinato');dEl.classList.remove('abbinato');tEl.classList.add('corretto','locked');dEl.classList.add('corretto','locked');}
+    else{tEl.classList.remove('abbinato');dEl.classList.remove('abbinato');tEl.classList.add('sbagliato','locked');dEl.classList.add('sbagliato','locked');}
+    const item=document.createElement('div');item.className='col-feedback-item '+(giusto?'ok':'no');
+    item.innerHTML=`<span>${giusto?'✅':'❌'}</span><span><strong>${termLabelD[tKey]}</strong>${giusto?'':' → <em>'+defLabelD[tKey]+'</em>'}</span>`;
+    fbDiv.appendChild(item);
+  });
+  document.getElementById('btn-verifica-col').style.display='none';
+  document.getElementById('btn-avanti-col').style.display='block';
+  document.getElementById('btn-avanti-col').textContent='Vai all\'Esercizio 2 ▶ ('+corretti+'/6 corretti)';
+}
+function vaiAQuiz(){document.getElementById('screen-col').classList.remove('attiva');document.getElementById('screen-quiz').classList.add('attiva');mostraDomanda();}
+
+const domande=[
+  {cat:'neo',catLabel:'🌾 Neolitico',testo:'Il Neolitico inizia circa:',opts:['3 milioni di anni fa','10.000 anni fa','500.000 anni fa','2.000 anni fa'],c:1},
+  {cat:'neo',catLabel:'🌾 Neolitico',testo:'Nel Neolitico le persone coltivano:',opts:['Banane e cocco','Grano, orzo, riso e mais','Solo funghi','Non mangiano più'],c:1},
+  {cat:'neo',catLabel:'🌾 Neolitico',testo:'Il villaggio neolitico in Turchia si chiama:',opts:['Olduvai','Tanzania','Çatal Hüyük','Africa'],c:2},
+  {cat:'neo',catLabel:'🌾 Neolitico',testo:'A Çatal Hüyük si entrava nelle case:',opts:['Dalla porta','Dalla finestra','Dal tetto','Dal sottosuolo'],c:2},
+  {cat:'neo',catLabel:'🌾 Neolitico',testo:'I vasi di argilla si fanno con la tecnica:',opts:['A spirale','A colombino','A strati','A mano libera'],c:1},
+  {cat:'neo',catLabel:'🌾 Neolitico',testo:'Le palafitte sono capanne costruite:',opts:['Sugli alberi','Su pali nell\'acqua o vicino ai fiumi','Sottoterra','Sulle montagne'],c:1},
+  {cat:'neo',catLabel:'🌾 Neolitico',testo:'I villaggi nascevano vicino ai fiumi perché l\'acqua serviva per:',opts:['Fare il bagno','Bere, coltivare e allevare','Costruire barche','Scaldarsi'],c:1},
+  {cat:'neo',catLabel:'🌾 Neolitico',testo:'Quale fu il primo animale addomesticato dall\'uomo?',opts:['Il gatto','Il cavallo','La pecora','Il lupo'],c:3},
+  {cat:'neo',catLabel:'🌾 Neolitico',testo:'Nel Neolitico nascono i mestieri perché:',opts:['Era un gioco','La società era più grande e servivano persone esperte in cose diverse','Gli anziani lo decisero','Le donne non lavoravano più'],c:1},
+  {cat:'conf',catLabel:'⚖️ Confronto',testo:'Nel Paleolitico si era nomadi.\nNel Neolitico si è:',opts:['Ancora nomadi','Stanziali — si resta fermi','Sempre in cammino','Solitari'],c:1},
+  {cat:'conf',catLabel:'⚖️ Confronto',testo:'Nel Paleolitico si cerca il cibo.\nNel Neolitico si:',opts:['Cerca ancora','Coltiva e alleva','Mangia solo pesce','Non mangia'],c:1},
+  {cat:'paleo',catLabel:'🪨 Paleolitico',testo:'Paleolitico vuol dire:',opts:['Età della pietra levigata','Età della pietra scheggiata','Età del fuoco','Età del ghiaccio'],c:1},
+  {cat:'paleo',catLabel:'🪨 Paleolitico',testo:'Il primo strumento di pietra si chiama:',opts:['Raschiatoio','Freccia','Chopper','Telaio'],c:2},
+];
+let idx=0,risposte=Array(domande.length).fill(null),consegnato=false,nomeAlunno='';
+function controllaNome(){document.getElementById('btn-start').disabled=(document.getElementById('nome-input').value.trim().length<2);}
+function inizia(){nomeAlunno=document.getElementById('nome-input').value.trim();document.getElementById('screen-start').classList.remove('attiva');document.getElementById('screen-col').classList.add('attiva');}
+function mostraDomanda(){
+  const d=domande[idx];
+  document.getElementById('dom-cat').className='domanda-categoria cat-'+d.cat;
+  document.getElementById('dom-cat').textContent=d.catLabel;
+  document.getElementById('dom-num').textContent='Domanda '+(idx+1)+' di '+domande.length;
+  document.getElementById('dom-testo').textContent=d.testo;
+  document.getElementById('prog-label').textContent='Domanda '+(idx+1)+' di '+domande.length;
+  document.getElementById('prog-bar').style.width=((idx+1)/domande.length*100)+'%';
+  const wrap=document.getElementById('opzioni-wrap');wrap.innerHTML='';
+  ['A','B','C','D'].forEach((l,i)=>{
+    const btn=document.createElement('button');
+    btn.className='opzione'+(risposte[idx]!==null?' disabled':'');
+    btn.innerHTML=`<span class="opzione-lettera">${l}</span><span>${d.opts[i]}</span>`;
+    if(risposte[idx]===i)btn.classList.add(i===d.c?'corretta':'sbagliata');
+    else if(risposte[idx]!==null&&i===d.c)btn.classList.add('corretta');
+    btn.onclick=()=>rispondi(i);wrap.appendChild(btn);
+  });
+  const fb=document.getElementById('feedback');
+  if(risposte[idx]!==null){fb.className='feedback '+(risposte[idx]===d.c?'ok':'no');fb.textContent=risposte[idx]===d.c?'✅ Esatto!':'❌ Guarda la risposta giusta in verde.';}
+  else{fb.className='feedback';fb.textContent='';}
+  document.getElementById('btn-back').disabled=(idx===0);
+  aggiornaBottoneAvanti();
+  document.getElementById('score-live').textContent=calcolaScore();
+}
+function rispondi(i){if(risposte[idx]!==null)return;risposte[idx]=i;mostraDomanda();}
+function aggiornaBottoneAvanti(){
+  const b=document.getElementById('btn-next');
+  if(idx===domande.length-1){b.textContent='Consegna ✅';b.className='btn-nav btn-consegna';b.onclick=consegna;}
+  else{b.textContent='Avanti ▶';b.className='btn-nav btn-next';b.onclick=vaiAvanti;}
+  b.disabled=(risposte[idx]===null);
+}
+function vaiAvanti(){if(idx<domande.length-1){idx++;mostraDomanda();}}
+function vaiIndietro(){if(idx>0){idx--;mostraDomanda();}}
+function calcolaScore(){let s=0;domande.forEach((d,i)=>{if(risposte[i]===d.c)s++;});return s;}
+function consegna(){
+  if(consegnato)return;
+  const n=risposte.filter(r=>r===null).length;
+  if(n>0){const fb=document.getElementById('feedback');fb.className='feedback warn';fb.textContent='⚠️ Hai ancora '+n+' domande senza risposta. Torna indietro!';return;}
+  consegnato=true;mostraFinale();
+}
+function mostraFinale(){
+  document.getElementById('screen-quiz').classList.remove('attiva');document.getElementById('screen-fine').classList.add('attiva');
+  const qs=calcolaScore(),qt=domande.length,cs=Object.values(colCorretti).filter(v=>v).length,ct=6;
+  const tot=qs+cs,totMax=qt+ct,p=Math.round(tot/totMax*100);
+  document.getElementById('finale-nome').textContent='👤 '+nomeAlunno;
+  document.getElementById('score-finale').textContent=tot;
+  document.getElementById('score-su').textContent='punti su '+totMax+' (collegamento: '+cs+'/'+ct+' • domande: '+qs+'/'+qt+')';
+  document.getElementById('score-pct').textContent=p+'% di risposte esatte';
+  let st='',msg='';
+  if(p>=90){st='⭐⭐⭐';msg='Bravissimo/a! Hai risposto benissimo. Ottimo lavoro!';}
+  else if(p>=70){st='⭐⭐';msg='Molto bene! Conosci bene gli argomenti. Continua così!';}
+  else if(p>=50){st='⭐';msg='Bene! Hai dimostrato le cose principali. Rileggi le mappe per ricordare meglio.';}
+  else{st='📖';msg='Hai bisogno di ripassare. Rileggi le mappe con calma. Ce la fai!';}
+  document.getElementById('stelle').textContent=st;document.getElementById('msg-finale').textContent=msg;
+  const rc=document.getElementById('riepilogo-col');rc.innerHTML='';
+  Object.keys(coppieD).forEach(k=>{
+    const ok=colCorretti[k]===true;const div=document.createElement('div');
+    div.className='riepilogo-item '+(ok?'ok':'no');
+    div.innerHTML=`<span class="riepilogo-ico">${ok?'✅':'❌'}</span><span><strong>${termLabelD[k]}</strong>${ok?'':' → <em>'+defLabelD[k]+'</em>'}</span>`;
+    rc.appendChild(div);
+  });
+  const rq=document.getElementById('riepilogo-quiz');rq.innerHTML='';
+  domande.forEach((d,i)=>{
+    const ok=risposte[i]===d.c;const div=document.createElement('div');
+    div.className='riepilogo-item '+(ok?'ok':'no');
+    div.innerHTML=`<span class="riepilogo-ico">${ok?'✅':'❌'}</span><span><strong>${i+1}.</strong> ${d.testo}${ok?'':' → <em>'+d.opts[d.c]+'</em>'}</span>`;
+    rq.appendChild(div);
+  });
+}
+</script>
+</body>
+</html>
