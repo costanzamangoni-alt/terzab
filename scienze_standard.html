@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verifica — Scienze</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--primary:#6B21A8;--primary-light:#EDE9FE;--primary-dark:#4C1D95;--sci:#2E7D32;--green:#15803D;--red:#DC2626;--bg:#FAF5FF;--card:#fff;--radius:16px;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:var(--bg);padding:16px;}
+.wrap{max-width:680px;margin:0 auto;}
+.header{background:linear-gradient(135deg,#6B21A8,#2E7D32);border-radius:20px;padding:20px 24px;margin-bottom:20px;color:#fff;}
+.header h1{font-size:22px;font-weight:800;margin-bottom:4px;}
+.header p{font-size:13px;opacity:.88;}
+.header-meta{display:flex;gap:16px;margin-top:10px;font-size:12px;opacity:.85;flex-wrap:wrap;}
+.header-meta span{background:rgba(255,255,255,0.2);border-radius:8px;padding:3px 10px;font-weight:700;}
+.screen{display:none;}.screen.attiva{display:block;}
+.start-screen{text-align:center;padding:10px 0;}
+.start-emoji{font-size:56px;margin-bottom:12px;}
+.start-screen h2{font-size:22px;font-weight:800;color:var(--primary-dark);margin-bottom:8px;}
+.start-screen p{font-size:14px;color:#666;line-height:1.6;margin-bottom:6px;}
+.nome-input-wrap{margin:20px 0 10px;}
+.nome-input-wrap label{display:block;font-size:14px;font-weight:700;color:var(--primary-dark);margin-bottom:8px;}
+.nome-input{width:100%;padding:14px 16px;border:2.5px solid #DDD6FE;border-radius:14px;font-size:16px;font-family:inherit;font-weight:700;color:#333;outline:none;}
+.nome-input:focus{border-color:var(--primary);}
+.avviso{background:#FEF3C7;border:2px solid #F59E0B;border-radius:12px;padding:12px 16px;font-size:13px;color:#92400E;font-weight:700;margin:16px 0;line-height:1.5;text-align:left;}
+.btn-start{background:linear-gradient(135deg,#6B21A8,#2E7D32);color:#fff;border:none;border-radius:14px;padding:16px 40px;font-size:18px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:8px;transition:all .2s;width:100%;}
+.btn-start:hover{opacity:.9;}
+.btn-start:disabled{opacity:.4;pointer-events:none;}
+.sez-header{background:var(--primary-light);border-radius:14px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;}
+.sez-header-ico{font-size:22px;}
+.sez-header-txt{font-size:15px;font-weight:800;color:var(--primary-dark);}
+.sez-header-sub{font-size:12px;color:#7C3AED;margin-top:2px;}
+.col-istruzioni{background:#fff;border:2px solid #DDD6FE;border-radius:12px;padding:12px 16px;font-size:13px;color:#555;margin-bottom:14px;line-height:1.5;}
+.col-container{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;}
+.col-col h3{font-size:12px;font-weight:800;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;text-align:center;}
+.col-item{background:var(--card);border:2.5px solid #DDD6FE;border-radius:var(--radius);padding:11px 14px;margin-bottom:8px;cursor:pointer;font-size:13px;font-weight:600;text-align:center;line-height:1.4;transition:all .2s;user-select:none;}
+.col-item:hover:not(.locked){border-color:var(--primary);background:var(--primary-light);}
+.col-item.selected{border-color:var(--primary);background:var(--primary-light);box-shadow:0 0 0 3px rgba(107,33,168,0.2);}
+.col-item.abbinato{border-color:#9333EA;background:#F3E8FF;color:#4C1D95;}
+.col-item.corretto{border-color:var(--green);background:#DCFCE7;color:var(--green);pointer-events:none;}
+.col-item.sbagliato{border-color:var(--red);background:#FEE2E2;color:var(--red);pointer-events:none;}
+.col-item.locked{pointer-events:none;}
+.badge-num{display:inline-block;background:#9333EA;color:#fff;border-radius:50%;width:20px;height:20px;font-size:11px;font-weight:800;line-height:20px;text-align:center;margin-right:6px;}
+.col-feedback{margin:10px 0 14px;font-size:13px;line-height:1.6;display:none;}
+.col-feedback-item{display:flex;align-items:flex-start;gap:8px;padding:7px 10px;border-radius:10px;margin-bottom:6px;}
+.col-feedback-item.ok{background:#DCFCE7;color:#166534;}
+.col-feedback-item.no{background:#FEE2E2;color:#991B1B;}
+.btn-verifica{background:var(--primary);color:#fff;border:none;border-radius:12px;padding:13px 28px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;display:block;width:100%;margin-top:4px;}
+.btn-verifica:disabled{opacity:.4;pointer-events:none;}
+.btn-avanti-col{background:var(--green);color:#fff;border:none;border-radius:12px;padding:13px 28px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;display:none;width:100%;margin-top:8px;}
+.progress-wrap{margin-bottom:16px;}
+.progress-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.progress-label{font-size:13px;font-weight:700;color:var(--primary);}
+.progress-score{font-size:13px;font-weight:800;color:var(--primary);}
+.progress-bar-outer{background:#E9D5FF;border-radius:10px;height:10px;}
+.progress-bar-inner{background:linear-gradient(90deg,#6B21A8,#2E7D32);border-radius:10px;height:10px;transition:width .4s;}
+.domanda-box{background:var(--card);border-radius:var(--radius);padding:20px;margin-bottom:16px;box-shadow:0 3px 12px rgba(0,0,0,0.07);border-left:5px solid var(--primary);}
+.domanda-categoria{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+.cat-eco{color:#2E7D32;}.cat-pir{color:#E65100;}.cat-cat{color:#1565C0;}.cat-amb{color:#00838F;}
+.domanda-num{font-size:12px;color:#aaa;margin-bottom:6px;}
+.domanda-testo{font-size:16px;font-weight:700;color:#222;line-height:1.5;}
+.opzioni{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.opzione{background:var(--card);border:2.5px solid #DDD6FE;border-radius:14px;padding:14px 16px;cursor:pointer;font-size:14px;font-weight:600;text-align:left;line-height:1.4;transition:all .2s;font-family:inherit;display:flex;align-items:flex-start;gap:10px;}
+.opzione:hover:not(.disabled){background:#EDE9FE;border-color:var(--primary);}
+.opzione-lettera{background:var(--primary);color:#fff;border-radius:8px;min-width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;}
+.opzione.scelta{background:#EDE9FE;border-color:var(--primary);}
+.opzione.scelta .opzione-lettera{background:var(--primary-dark);}
+.opzione.disabled{pointer-events:none;opacity:.7;}
+.opzione.scelta.disabled{opacity:1;}
+.feedback{font-size:14px;font-weight:700;min-height:22px;margin-bottom:12px;padding:8px 12px;border-radius:10px;display:none;}
+.feedback.warn{background:#FEF3C7;color:#92400E;display:block;}
+.nav-buttons{display:flex;gap:10px;margin-bottom:8px;}
+.btn-nav{border:none;border-radius:12px;padding:12px 20px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .2s;}
+.btn-back{background:#E9D5FF;color:var(--primary-dark);}
+.btn-back:hover:not(:disabled){background:#DDD6FE;}
+.btn-back:disabled{opacity:.3;pointer-events:none;}
+.btn-next{background:var(--primary);color:#fff;flex:1;}
+.btn-next:hover:not(:disabled){background:var(--primary-dark);}
+.btn-next:disabled{opacity:.4;pointer-events:none;}
+.btn-consegna{background:#15803D;color:#fff;flex:1;}
+.finale{padding:8px 0;}
+.finale-header{background:linear-gradient(135deg,#6B21A8,#2E7D32);border-radius:20px;padding:24px;text-align:center;color:#fff;margin-bottom:20px;}
+.finale-nome{font-size:16px;opacity:.9;margin-bottom:4px;}
+.finale-header h2{font-size:24px;font-weight:800;}
+.punteggio-grande{background:rgba(255,255,255,0.2);border-radius:16px;padding:16px;margin-top:12px;}
+.punteggio-num{font-size:56px;font-weight:800;line-height:1;}
+.punteggio-su{font-size:16px;opacity:.9;margin-top:4px;}
+.punteggio-pct{font-size:20px;font-weight:800;margin-top:4px;}
+.stelle{font-size:40px;letter-spacing:6px;margin:16px 0 8px;}
+.msg-finale{font-size:15px;color:#555;line-height:1.7;background:var(--primary-light);border-radius:14px;padding:14px 16px;margin-bottom:16px;}
+.riepilogo h3{font-size:14px;font-weight:800;color:#777;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;}
+.riepilogo-sez{font-size:12px;font-weight:800;color:#aaa;text-transform:uppercase;letter-spacing:1px;margin:12px 0 6px;}
+.riepilogo-item{display:flex;align-items:flex-start;gap:8px;font-size:13px;margin-bottom:6px;padding:8px 10px;border-radius:10px;line-height:1.4;}
+.riepilogo-item.ok{background:#DCFCE7;color:#166534;}
+.riepilogo-item.no{background:#FEE2E2;color:#991B1B;}
+.riepilogo-ico{flex-shrink:0;font-size:15px;margin-top:1px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="screen attiva" id="screen-start">
+    <div class="header">
+      <h1>📝 Verifica — Scienze</h1>
+      <p>Gli ecosistemi e le relazioni tra viventi</p>
+      <div class="header-meta"><span>🌿 Classe terza</span><span>2 esercizi</span><span>⏱️ ~20 minuti</span></div>
+    </div>
+    <div class="start-screen">
+      <div class="start-emoji">🌿</div>
+      <h2>Benvenuto/a alla verifica!</h2>
+      <p><strong>Esercizio 1:</strong> Collega 6 termini alle definizioni.<br><strong>Esercizio 2:</strong> 22 domande a scelta multipla.<br>Puoi tornare indietro per rivedere le risposte.</p>
+      <div class="nome-input-wrap">
+        <label for="nome-input">✏️ Scrivi il tuo nome e cognome:</label>
+        <input type="text" id="nome-input" class="nome-input" placeholder="Es. Mario Rossi" oninput="controllaNome()">
+      </div>
+      <div class="avviso">⚠️ Puoi eseguire questa verifica <strong>una sola volta</strong>. Clicca "Inizia" solo quando sei pronto/a!</div>
+      <button class="btn-start" id="btn-start" onclick="inizia()" disabled>Inizia la verifica ▶</button>
+    </div>
+  </div>
+  <div class="screen" id="screen-col">
+    <div class="sez-header"><span class="sez-header-ico">🔗</span><div><div class="sez-header-txt">Esercizio 1 — Collegamento</div><div class="sez-header-sub">Abbina tutti i termini, poi clicca "Verifica"</div></div></div>
+    <div class="col-istruzioni">👆 Tocca un termine a sinistra → poi tocca la definizione giusta a destra. Quando hai abbinato tutti e 6, clicca <strong>Verifica</strong>.</div>
+    <div class="col-container">
+      <div class="col-col"><h3>Termine</h3>
+        <div class="col-item" id="ct1" onclick="selTerm('ct1','Ecosistema')">🌍 Ecosistema</div>
+        <div class="col-item" id="ct2" onclick="selTerm('ct2','Produttore')">🌿 Produttore</div>
+        <div class="col-item" id="ct3" onclick="selTerm('ct3','Decompositori')">🍄 Decompositori</div>
+        <div class="col-item" id="ct4" onclick="selTerm('ct4','CatenaAlim')">🔗 Catena alimentare</div>
+        <div class="col-item" id="ct5" onclick="selTerm('ct5','NicchiaEco')">🎯 Nicchia ecologica</div>
+        <div class="col-item" id="ct6" onclick="selTerm('ct6','SpecieAlien')">⚠️ Specie aliena</div>
+      </div>
+      <div class="col-col"><h3>Definizione</h3>
+        <div class="col-item" id="cd1" onclick="selDef('cd1','NicchiaEco')">Il posto preciso che ogni essere vivente occupa in un ecosistema</div>
+        <div class="col-item" id="cd2" onclick="selDef('cd2','Produttore')">Essere vivente capace di fabbricare da sé le sostanze nutritive</div>
+        <div class="col-item" id="cd3" onclick="selDef('cd3','Ecosistema')">Ambiente composto da esseri viventi e non viventi in relazione tra loro</div>
+        <div class="col-item" id="cd4" onclick="selDef('cd4','SpecieAlien')">Pianta o animale che vive in un ambiente diverso da quello di origine</div>
+        <div class="col-item" id="cd5" onclick="selDef('cd5','CatenaAlim')">Serie di organismi in cui ognuno mangia quello precedente</div>
+        <div class="col-item" id="cd6" onclick="selDef('cd6','Decompositori')">Organismi che si nutrono di resti morti trasformandoli in sali minerali</div>
+      </div>
+    </div>
+    <div class="col-feedback" id="col-feedback"></div>
+    <button class="btn-verifica" id="btn-verifica-col" onclick="verificaCol()" disabled>✅ Verifica i collegamenti</button>
+    <button class="btn-avanti-col" id="btn-avanti-col" onclick="vaiAQuiz()">Vai all'Esercizio 2 ▶</button>
+  </div>
+  <div class="screen" id="screen-quiz">
+    <div class="sez-header"><span class="sez-header-ico">❓</span><div><div class="sez-header-txt">Esercizio 2 — Scelta multipla</div><div class="sez-header-sub">Scegli la risposta giusta • vedrai i risultati alla fine</div></div></div>
+    <div class="progress-wrap">
+      <div class="progress-top"><span class="progress-label" id="prog-label">Domanda 1 di 22</span><span class="progress-score">📝 <span id="risposte-date">0</span> / 22 risposte date</span></div>
+      <div class="progress-bar-outer"><div class="progress-bar-inner" id="prog-bar" style="width:0%"></div></div>
+    </div>
+    <div class="domanda-box">
+      <div class="domanda-categoria" id="dom-cat"></div>
+      <div class="domanda-num" id="dom-num"></div>
+      <div class="domanda-testo" id="dom-testo"></div>
+    </div>
+    <div class="opzioni" id="opzioni-wrap"></div>
+    <div class="feedback" id="feedback"></div>
+    <div class="nav-buttons">
+      <button class="btn-nav btn-back" id="btn-back" onclick="vaiIndietro()" disabled>◀ Indietro</button>
+      <button class="btn-nav btn-next" id="btn-next" onclick="vaiAvanti()" disabled>Avanti ▶</button>
+    </div>
+  </div>
+  <div class="screen" id="screen-fine">
+    <div class="finale">
+      <div class="finale-header"><div class="finale-nome" id="finale-nome"></div><h2>Verifica consegnata! 🎉</h2><div class="punteggio-grande"><div class="punteggio-num" id="score-finale"></div><div class="punteggio-su" id="score-su"></div><div class="punteggio-pct" id="score-pct"></div></div></div>
+      <div class="stelle" id="stelle"></div>
+      <div class="msg-finale" id="msg-finale"></div>
+      <div class="riepilogo"><h3>📋 Riepilogo completo</h3><div class="riepilogo-sez">🔗 Esercizio 1 — Collegamento</div><div id="riepilogo-col"></div><div class="riepilogo-sez">❓ Esercizio 2 — Scelta multipla</div><div id="riepilogo-quiz"></div></div>
+    </div>
+  </div>
+</div>
+<script>
+const coppieCorrette={'Ecosistema':'cd3','Produttore':'cd2','Decompositori':'cd6','CatenaAlim':'cd5','NicchiaEco':'cd1','SpecieAlien':'cd4'};
+const termLabel={'Ecosistema':'Ecosistema','Produttore':'Produttore','Decompositori':'Decompositori','CatenaAlim':'Catena alimentare','NicchiaEco':'Nicchia ecologica','SpecieAlien':'Specie aliena'};
+const defLabel={'Ecosistema':'Ambiente con esseri viventi e non viventi in relazione','Produttore':'Essere vivente che fabbrica da sé le sostanze nutritive','Decompositori':'Si nutrono di resti morti trasformandoli in sali minerali','CatenaAlim':'Serie di organismi in cui ognuno mangia quello precedente','NicchiaEco':'Il posto preciso di ogni essere vivente nell\'ecosistema','SpecieAlien':'Vive in un ambiente diverso da quello di origine'};
+let selT=null,selD=null,abbinamenti={},colCorretti={},colVerificato=false;
+function aggiornaBtnVerifica(){document.getElementById('btn-verifica-col').disabled=(Object.keys(abbinamenti).length<6);}
+function selTerm(id,key){if(colVerificato)return;document.querySelectorAll('#screen-col .col-item').forEach(el=>{if(!el.classList.contains('corretto')&&!el.classList.contains('sbagliato'))el.classList.remove('selected');});selT={id,key};document.getElementById(id).classList.add('selected');if(selD)abbina();}
+function selDef(id,key){if(colVerificato)return;document.querySelectorAll('#screen-col .col-item').forEach(el=>{if(!el.classList.contains('corretto')&&!el.classList.contains('sbagliato'))el.classList.remove('selected');});selD={id,key};document.getElementById(id).classList.add('selected');if(selT)abbina();}
+function abbina(){const t=selT,d=selD;selT=null;selD=null;document.getElementById(t.id).classList.remove('selected');document.getElementById(d.id).classList.remove('selected');Object.keys(abbinamenti).forEach(k=>{if(k===t.key||abbinamenti[k]===d.id)delete abbinamenti[k];});abbinamenti[t.key]=d.id;aggiornaVisuale();aggiornaBtnVerifica();}
+function aggiornaVisuale(){document.querySelectorAll('#screen-col .col-item').forEach(el=>{if(!el.classList.contains('corretto')&&!el.classList.contains('sbagliato')){el.classList.remove('abbinato','selected');const b=el.querySelector('.badge-num');if(b)b.remove();}});let num=1;Object.entries(abbinamenti).forEach(([tKey,dId])=>{const tIdx=Object.keys(coppieCorrette).indexOf(tKey);const tEl=document.getElementById('ct'+(tIdx+1));const dEl=document.getElementById(dId);if(tEl&&dEl){tEl.classList.add('abbinato');dEl.classList.add('abbinato');const bt=document.createElement('span');bt.className='badge-num';bt.textContent=num;tEl.prepend(bt);const bd=document.createElement('span');bd.className='badge-num';bd.textContent=num;dEl.prepend(bd);num++;}});}
+function verificaCol(){if(Object.keys(abbinamenti).length<6)return;colVerificato=true;const fbDiv=document.getElementById('col-feedback');fbDiv.innerHTML='';fbDiv.style.display='block';let corretti=0;Object.keys(coppieCorrette).forEach(tKey=>{const tIdx=Object.keys(coppieCorrette).indexOf(tKey);const tEl=document.getElementById('ct'+(tIdx+1));const dId=abbinamenti[tKey];const dEl=document.getElementById(dId);const giusto=(coppieCorrette[tKey]===dId);colCorretti[tKey]=giusto;if(giusto){corretti++;tEl.classList.remove('abbinato');dEl.classList.remove('abbinato');tEl.classList.add('corretto','locked');dEl.classList.add('corretto','locked');}else{tEl.classList.remove('abbinato');dEl.classList.remove('abbinato');tEl.classList.add('sbagliato','locked');dEl.classList.add('sbagliato','locked');}const item=document.createElement('div');item.className='col-feedback-item '+(giusto?'ok':'no');item.innerHTML=`<span>${giusto?'✅':'❌'}</span><span><strong>${termLabel[tKey]}</strong>${giusto?'':' → <em>'+defLabel[tKey]+'</em>'}</span>`;fbDiv.appendChild(item);});document.getElementById('btn-verifica-col').style.display='none';document.getElementById('btn-avanti-col').style.display='block';document.getElementById('btn-avanti-col').textContent='Vai all\'Esercizio 2 ▶ ('+corretti+'/6 corretti)';}
+function vaiAQuiz(){document.getElementById('screen-col').classList.remove('attiva');document.getElementById('screen-quiz').classList.add('attiva');mostraDomanda();}
+const domande=[
+  {cat:'eco',catLabel:'🌍 Ecosistemi',testo:'Cos\'è un ecosistema?',opts:['Solo gli animali di un ambiente','Un ambiente con esseri viventi e non viventi in relazione tra loro','Solo le piante di un bosco','Un insieme di fiumi e laghi'],c:1},
+  {cat:'eco',catLabel:'🌍 Ecosistemi',testo:'Quale di questi è un ecosistema naturale?',opts:['Un campo coltivato','Una città','Un bosco','Un parco cittadino'],c:2},
+  {cat:'eco',catLabel:'🌍 Ecosistemi',testo:'Quale di questi è un ecosistema artificiale?',opts:['Un prato','Un oceano','Un campo coltivato','Una foresta'],c:2},
+  {cat:'eco',catLabel:'🌍 Ecosistemi',testo:'Un ecosistema è in equilibrio quando:',opts:['Ci sono solo animali carnivori','Tutti i viventi riescono a trovare il cibo necessario','Non ci sono predatori','Ci sono solo piante'],c:1},
+  {cat:'eco',catLabel:'🌍 Ecosistemi',testo:'Cosa si intende per nicchia ecologica?',opts:['La tana di un animale','Il posto preciso che ogni essere vivente occupa in un ecosistema','Il territorio di caccia','Il nido di un uccello'],c:1},
+  {cat:'eco',catLabel:'🌍 Ecosistemi',testo:'Cosa sono le specie aliene?',opts:['Animali estinti','Piante o animali che vivono in un ambiente diverso da quello di origine','Animali dello spazio','Specie molto rare'],c:1},
+  {cat:'pir',catLabel:'🌿 Piramide alimentare',testo:'Chi sono i produttori nella piramide alimentare?',opts:['Gli animali carnivori','I funghi e i batteri','I vegetali, che fabbricano da sé le sostanze nutritive','Gli erbivori'],c:2},
+  {cat:'pir',catLabel:'🌿 Piramide alimentare',testo:'Come si chiamano gli animali che si nutrono di vegetali?',opts:['Carnivori','Erbivori','Decompositori','Produttori'],c:1},
+  {cat:'pir',catLabel:'🌿 Piramide alimentare',testo:'Come si chiamano gli animali che si nutrono di altri animali?',opts:['Erbivori','Produttori','Consumatori secondari — carnivori','Decompositori'],c:2},
+  {cat:'pir',catLabel:'🌿 Piramide alimentare',testo:'Cosa fanno i decompositori?',opts:['Producono ossigeno','Si nutrono di resti morti trasformandoli in sali minerali','Cacciano altri animali','Producono il proprio cibo'],c:1},
+  {cat:'pir',catLabel:'🌿 Piramide alimentare',testo:'I lombrichi rientrano tra i:',opts:['Produttori','Consumatori primari','Consumatori secondari','Decompositori'],c:3},
+  {cat:'pir',catLabel:'🌿 Piramide alimentare',testo:'In quanti gruppi si dividono gli esseri viventi in base a come si procurano il cibo?',opts:['Due','Tre','Quattro','Cinque'],c:1},
+  {cat:'cat',catLabel:'🔗 Catena alimentare',testo:'Cosa significa la freccia in una catena alimentare?',opts:['"vive insieme a"','"è mangiato da"','"è più grande di"','"si riproduce con"'],c:1},
+  {cat:'cat',catLabel:'🔗 Catena alimentare',testo:'In una catena il trifoglio viene mangiato dal coniglio. Il coniglio viene mangiato da:',opts:['Un fungo','Un batterio','La volpe','Un produttore'],c:2},
+  {cat:'cat',catLabel:'🔗 Catena alimentare',testo:'Cosa si forma quando più catene alimentari si intrecciano?',opts:['Una piramide alimentare','Una rete alimentare','Un ecosistema artificiale','Una nicchia ecologica'],c:1},
+  {cat:'cat',catLabel:'🔗 Catena alimentare',testo:'Chi trasforma i resti degli organismi morti in sali minerali?',opts:['I produttori','I consumatori primari','I decompositori','I carnivori'],c:2},
+  {cat:'cat',catLabel:'🔗 Catena alimentare',testo:'A cosa servono i sali minerali prodotti dai decompositori?',opts:['A nutrire i carnivori','A favorire la crescita di nuove piante','A formare le rocce','A nutrire i pesci'],c:1},
+  {cat:'amb',catLabel:'🌊 Ambienti',testo:'Nell\'ambiente marino chi sono i produttori?',opts:['I tonni','Le alghe','I granchi','I delfini'],c:1},
+  {cat:'amb',catLabel:'🌊 Ambienti',testo:'Nell\'ambiente marino i consumatori secondari sono:',opts:['Le alghe','I granchi e le aragoste','Tonni e delfini','I batteri'],c:2},
+  {cat:'amb',catLabel:'🌊 Ambienti',testo:'Nei pascoli di alta montagna i consumatori primari sono:',opts:['Aquile e gufi','Lombrichi e chiocciole','Api, farfalle, camosci e marmotte','Solo le piante'],c:2},
+  {cat:'amb',catLabel:'🌊 Ambienti',testo:'Lo scoiattolo grigio è una specie aliena perché:',opts:['È un animale molto piccolo','Proviene dagli Stati Uniti e vive in un ambiente non suo','Ha il pelo grigio','Vive solo in montagna'],c:1},
+  {cat:'amb',catLabel:'🌊 Ambienti',testo:'Rondine e pipistrello non si ostacolano perché:',opts:['Sono amici','La rondine caccia di giorno e il pipistrello di notte','Mangiano cose diverse','Vivono in posti diversi'],c:1},
+];
+let idx=0,risposte=Array(domande.length).fill(null),consegnato=false,nomeAlunno='';
+function controllaNome(){document.getElementById('btn-start').disabled=(document.getElementById('nome-input').value.trim().length<2);}
+function inizia(){nomeAlunno=document.getElementById('nome-input').value.trim();document.getElementById('screen-start').classList.remove('attiva');document.getElementById('screen-col').classList.add('attiva');}
+function mostraDomanda(){const d=domande[idx];document.getElementById('dom-cat').className='domanda-categoria cat-'+d.cat;document.getElementById('dom-cat').textContent=d.catLabel;document.getElementById('dom-num').textContent='Domanda '+(idx+1)+' di '+domande.length;document.getElementById('dom-testo').textContent=d.testo;document.getElementById('prog-label').textContent='Domanda '+(idx+1)+' di '+domande.length;document.getElementById('prog-bar').style.width=((idx+1)/domande.length*100)+'%';document.getElementById('risposte-date').textContent=risposte.filter(r=>r!==null).length;const wrap=document.getElementById('opzioni-wrap');wrap.innerHTML='';['A','B','C','D'].forEach((l,i)=>{const btn=document.createElement('button');btn.className='opzione'+(risposte[idx]!==null?' disabled':'');if(risposte[idx]===i)btn.classList.add('scelta');btn.innerHTML=`<span class="opzione-lettera">${l}</span><span>${d.opts[i]}</span>`;btn.onclick=()=>rispondi(i);wrap.appendChild(btn);});document.getElementById('feedback').className='feedback';document.getElementById('feedback').textContent='';document.getElementById('btn-back').disabled=(idx===0);aggiornaBottoneAvanti();}
+function rispondi(i){if(risposte[idx]!==null)return;risposte[idx]=i;mostraDomanda();}
+function aggiornaBottoneAvanti(){const b=document.getElementById('btn-next');if(idx===domande.length-1){b.textContent='Consegna ✅';b.className='btn-nav btn-consegna';b.onclick=consegna;}else{b.textContent='Avanti ▶';b.className='btn-nav btn-next';b.onclick=vaiAvanti;}b.disabled=(risposte[idx]===null);}
+function vaiAvanti(){if(idx<domande.length-1){idx++;mostraDomanda();}}
+function vaiIndietro(){if(idx>0){idx--;mostraDomanda();}}
+function calcolaScore(){let s=0;domande.forEach((d,i)=>{if(risposte[i]===d.c)s++;});return s;}
+function consegna(){if(consegnato)return;const n=risposte.filter(r=>r===null).length;if(n>0){const fb=document.getElementById('feedback');fb.className='feedback warn';fb.textContent='⚠️ Hai ancora '+n+' domande senza risposta. Torna indietro per completarle tutte.';return;}consegnato=true;mostraFinale();}
+function mostraFinale(){document.getElementById('screen-quiz').classList.remove('attiva');document.getElementById('screen-fine').classList.add('attiva');const qs=calcolaScore(),qt=domande.length,cs=Object.values(colCorretti).filter(v=>v).length,ct=6;const tot=qs+cs,totMax=qt+ct,p=Math.round(tot/totMax*100);document.getElementById('finale-nome').textContent='👤 '+nomeAlunno;document.getElementById('score-finale').textContent=tot;document.getElementById('score-su').textContent='punti totali su '+totMax+' (collegamento: '+cs+'/'+ct+' • quiz: '+qs+'/'+qt+')';document.getElementById('score-pct').textContent=p+'% di risposte esatte';let st='',msg='';if(p>=90){st='⭐⭐⭐';msg='Eccellente! Dimostri una conoscenza sicura e completa degli argomenti. Ottimo lavoro!';}else if(p>=75){st='⭐⭐';msg='Molto bene! Conosci bene gli argomenti. Rileggi le parti dove hai sbagliato per consolidare.';}else if(p>=55){st='⭐';msg='Hai dimostrato una conoscenza di base. Rileggi le pagine per rafforzare i concetti.';}else{st='📖';msg='Hai bisogno di ripasso. Rileggi con calma le pagine sugli ecosistemi.';}document.getElementById('stelle').textContent=st;document.getElementById('msg-finale').textContent=msg;const rc=document.getElementById('riepilogo-col');rc.innerHTML='';Object.keys(coppieCorrette).forEach(k=>{const ok=colCorretti[k]===true;const div=document.createElement('div');div.className='riepilogo-item '+(ok?'ok':'no');div.innerHTML=`<span class="riepilogo-ico">${ok?'✅':'❌'}</span><span><strong>${termLabel[k]}</strong>${ok?'':' → <em>'+defLabel[k]+'</em>'}</span>`;rc.appendChild(div);});const rq=document.getElementById('riepilogo-quiz');rq.innerHTML='';domande.forEach((d,i)=>{const ok=risposte[i]===d.c;const div=document.createElement('div');div.className='riepilogo-item '+(ok?'ok':'no');div.innerHTML=`<span class="riepilogo-ico">${ok?'✅':'❌'}</span><span><strong>${i+1}.</strong> ${d.testo}${ok?'':' → <em>'+d.opts[d.c]+'</em>'}</span>`;rq.appendChild(div);});}
+</script>
+</body>
+</html>
